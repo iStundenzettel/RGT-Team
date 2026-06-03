@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="cache-control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="expires" content="0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Stundenzettel – Setup</title>
@@ -212,16 +215,6 @@
             font-size: 12px;
             color: #999;
         }
-        .dashboard-link {
-            text-align: center;
-            margin-top: 12px;
-        }
-        .dashboard-link a {
-            color: #357abd;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 13px;
-        }
         @media (max-width: 480px) {
             .container { padding: 32px 24px; }
             .header h1 { font-size: 24px; }
@@ -246,7 +239,7 @@
             <form id="form1">
                 <div class="form-group">
                     <label for="name"><span>👤</span> Name</label>
-                    <input type="text" id="name" placeholder="z.B. Max Mustermann" required>
+                    <input type="text" id="name" placeholder="z.B. Adam Riese" required>
                 </div>
 
                 <div class="form-group">
@@ -256,14 +249,10 @@
                 </div>
 
                 <div class="button-group">
-                    <button type="button" class="btn-secondary" onclick="goToDashboard()">← Abbrechen</button>
+                    <button type="button" class="btn-secondary" onclick="goBack()">← Abbrechen</button>
                     <button type="submit" class="btn-primary">Weiter →</button>
                 </div>
             </form>
-
-            <div class="dashboard-link">
-                <a href="javascript:goToDashboard()">📊 Zum Dashboard</a>
-            </div>
         </div>
 
         <div class="step" id="step2">
@@ -339,46 +328,59 @@
             goToStep2();
         });
 
+        // DIREKTER BUTTON-CLICK statt Form Submit
+        const saveBtn = document.querySelector('form#form2 .btn-primary');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                
+                try {
+                    const name = sessionStorage.getItem('temp_name');
+                    const hours = parseFloat(sessionStorage.getItem('temp_hours'));
+
+                    if (!name || !hours) {
+                        alert('Fehler: Bitte von vorne beginnen.');
+                        return;
+                    }
+
+                    const schedule = [];
+                    days.forEach(day => {
+                        const von = document.getElementById(`${day}_von`);
+                        const bis = document.getElementById(`${day}_bis`);
+                        const team = document.getElementById(`${day}_team`);
+                        
+                        if (von && bis && team) {
+                            schedule.push({ day, von: von.value, bis: bis.value, team: team.checked });
+                        }
+                    });
+
+                    const key = `stundenzettel_${name.replace(/\s+/g, '_').toUpperCase()}`;
+                    const userData = {
+                        name, wochenstunden: hours, schedule, eintraege: [],
+                        erstellt: new Date().toISOString()
+                    };
+
+                    localStorage.setItem(key, JSON.stringify(userData));
+                    sessionStorage.setItem('current_user', name.replace(/\s+/g, '_').toUpperCase());
+
+                    saveBtn.textContent = '✓ Gespeichert!';
+                    saveBtn.disabled = true;
+
+                    // DIREKT zur worker.html - OHNE setTimeout!
+                    console.log('📤 Leite weiter zu worker.html...');
+                    setTimeout(() => {
+                        window.location.href = 'worker.html';
+                    }, 500);
+                    
+                } catch (err) {
+                    console.error('❌ Fehler:', err);
+                    alert('Fehler beim Speichern: ' + err.message);
+                }
+            });
+        }
+        
         document.getElementById('form2').addEventListener('submit', (e) => {
             e.preventDefault();
-
-            try {
-                const name = sessionStorage.getItem('temp_name');
-                const hours = parseFloat(sessionStorage.getItem('temp_hours'));
-
-                if (!name || !hours) {
-                    alert('Fehler: Bitte von vorne beginnen.');
-                    return;
-                }
-
-                const schedule = [];
-                days.forEach(day => {
-                    const von = document.getElementById(`${day}_von`);
-                    const bis = document.getElementById(`${day}_bis`);
-                    const team = document.getElementById(`${day}_team`);
-                    
-                    if (von && bis && team) {
-                        schedule.push({ day, von: von.value, bis: bis.value, team: team.checked });
-                    }
-                });
-
-                const key = `stundenzettel_${name.replace(/\s+/g, '_').toUpperCase()}`;
-                const userData = {
-                    name, wochenstunden: hours, schedule, eintraege: [],
-                    erstellt: new Date().toISOString()
-                };
-
-                localStorage.setItem(key, JSON.stringify(userData));
-
-                const btn = e.target.querySelector('.btn-primary');
-                btn.textContent = '✓ Gespeichert!';
-                btn.disabled = true;
-
-                setTimeout(() => goToDashboard(), 800);
-            } catch (err) {
-                console.error('Fehler:', err);
-                alert('Fehler beim Speichern!');
-            }
         });
 
         function goToStep2() {
@@ -397,9 +399,9 @@
             document.getElementById('progressStep1').classList.add('active');
         }
 
-        function goToDashboard() {
+        function goBack() {
             sessionStorage.clear();
-            window.location.href = 'dashboard.html';
+            window.location.href = 'index.html';
         }
     </script>
 </body>
