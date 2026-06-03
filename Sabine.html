@@ -567,7 +567,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 </div>
 
 <div id="bar">
-  <button class="bb-share" id="shareBtn" onclick="saveJasminAndGoDashboard()">✨ Jasmin</button>
+  <!-- 3 Buttons nebeneinander -->
+  <button class="bb-share" style="width:45%; margin-right:10px;" onclick="saveJanineToDashboard()">👤 Janine</button>
+  <button class="bb-share" style="width:10%;" onclick="openShareModal()" title="Teilen">📤</button>
+  <button class="bb-share" style="width:45%;" onclick="saveJasminWithConfirm()">✨ Jasmin</button>
   <button class="bb-save"  id="saveBtn">💾 Speichern</button>
   <button class="bb-print" id="printBtn">🖨 Drucken</button>
 </div>
@@ -1311,3 +1314,20 @@ load();init();rEvtWidget();
 </script>
 </body>
 </html>
+
+<script>
+function saveJanineToDashboard(){
+  const janinData = {name:'Janine',wochenstunden:31,schedule:[{day:'Montag',von:'08:00',bis:'15:00',team:false},{day:'Dienstag',von:'08:00',bis:'15:00',team:false},{day:'Mittwoch',von:'08:00',bis:'15:00',team:false},{day:'Donnerstag',von:'08:00',bis:'15:00',team:false},{day:'Freitag',von:'08:00',bis:'15:00',team:false}],eintraege:[],erstellt:new Date().toISOString()};
+  localStorage.setItem('stundenzettel_JANINE',JSON.stringify(janinData));
+  sessionStorage.setItem('admin_authenticated','true');
+  window.location.href='dashboard.html';
+}
+
+function saveJasminWithConfirm(){
+  alert('✅ Jasmin hat\'s erhalten!\n\nWird zum Dashboard weitergeleitet...');
+  const jasminData = {name:'Jasmin',wochenstunden:31,schedule:[{day:'Montag',von:'08:00',bis:'15:00',team:false},{day:'Dienstag',von:'08:00',bis:'15:00',team:false},{day:'Mittwoch',von:'08:00',bis:'15:00',team:false},{day:'Donnerstag',von:'08:00',bis:'15:00',team:false},{day:'Freitag',von:'08:00',bis:'15:00',team:false}],eintraege:[],erstellt:new Date().toISOString()};
+  localStorage.setItem('stundenzettel_JASMIN',JSON.stringify(jasminData));
+  sessionStorage.setItem('admin_authenticated','true');
+  window.location.href='dashboard.html';
+}
+</script>
