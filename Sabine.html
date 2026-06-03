@@ -600,7 +600,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-se
 
 <div class="modal-overlay" id="shareModal">
   <div class="modal" style="text-align:center;max-width:320px">
-    <h2 style="font-size:22px;margin-bottom:6px">✨ An Janine senden</h2>
+    <h2 style="font-size:22px;margin-bottom:6px">✨ An Jasmin senden</h2>
     <p style="color:var(--sub);margin-bottom:16px;font-size:13px">Stundenzettel für <strong id="shareMonthLabel"></strong> weiterleiten</p>
     <div id="sharePreview" style="background:#f5f5f5;border-radius:10px;padding:12px;text-align:left;font-size:11px;font-family:monospace;white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-bottom:16px;color:#333"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
@@ -1037,8 +1037,7 @@ function delEvt(id){saveEvts(loadEvts().filter(e=>e.id!==id));rEvtList();}
 document.getElementById('prevBtn').onclick=()=>{S.month--;if(S.month<1){S.month=12;S.year--;}save();load();init();rToday();if(S.view!=='home')renderSub();};
 document.getElementById('nextBtn').onclick=()=>{S.month++;if(S.month>12){S.month=1;S.year++;}save();load();init();rToday();if(S.view!=='home')renderSub();};
 document.getElementById('saveBtn').onclick=()=>{save();const b=document.getElementById('saveBtn');b.textContent='✅ Gespeichert';b.classList.add('done');setTimeout(()=>{b.textContent='💾 Speichern';b.classList.remove('done');},2000);};
-document.getElementById('shareBtn').onclick=()=>{save();openShareModal();};
-
+// ✅ shareBtn wird jetzt durch onclick="saveJasminAndGoDashboard()" behandelt - nicht mehr hier!
 function loadPlan(){const r=localStorage.getItem('sz_plan');return r?JSON.parse(r):PLAN;}
 function savePlanData(newPlan){localStorage.setItem('sz_plan',JSON.stringify(newPlan));}
 
