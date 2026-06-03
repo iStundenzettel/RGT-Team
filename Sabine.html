@@ -1317,6 +1317,7 @@ load();init();rEvtWidget();
 
 <script>
 function saveJanineToDashboard(){
+  alert('👍 Janine hat\'s bekommen!\n\nWird zum Dashboard weitergeleitet...');
   const janinData = {name:'Janine',wochenstunden:31,schedule:[{day:'Montag',von:'08:00',bis:'15:00',team:false},{day:'Dienstag',von:'08:00',bis:'15:00',team:false},{day:'Mittwoch',von:'08:00',bis:'15:00',team:false},{day:'Donnerstag',von:'08:00',bis:'15:00',team:false},{day:'Freitag',von:'08:00',bis:'15:00',team:false}],eintraege:[],erstellt:new Date().toISOString()};
   localStorage.setItem('stundenzettel_JANINE',JSON.stringify(janinData));
   sessionStorage.setItem('admin_authenticated','true');
