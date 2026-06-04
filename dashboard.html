@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="cache-control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="expires" content="0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Stundenzettel – Dashboard</title>
@@ -321,7 +324,10 @@
                     <div><span class="stat-label">Tage</span><span class="stat-value">${userData.schedule ? userData.schedule.length : 0}</span></div>
                 </div>
 
-                <button class="view-detail" data-username="${userData.name}" onclick="openWorkerByButton(this)">Stundenzettel ansehen →</button>
+                <div style="display:flex; gap:10px;">
+                    <button class="view-detail" data-username="${userData.name}" onclick="openWorkerByButton(this)" style="flex:1;">Stundenzettel ansehen →</button>
+                    <button class="view-detail" style="background:#d93025; flex:0.3;" onclick="deleteUser('${userData.name}')" title="Löschen">🗑️</button>
+                </div>
             `;
 
             return div;
@@ -381,11 +387,32 @@
             window.location.href = 'worker.html';
         }
 
+        function deleteUser(userName) {
+            const cleanName = userName.replace(/\s+/g, '_').toUpperCase();
+            const key = `stundenzettel_${cleanName}`;
+            
+            const confirm = window.confirm(`❌ ${userName} wirklich löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden!`);
+            
+            if (confirm) {
+                localStorage.removeItem(key);
+                alert('✓ ' + userName + ' wurde gelöscht!');
+                // Seite neu laden
+                window.location.reload();
+            }
+        }
+
         document.getElementById('detailModal').addEventListener('click', (e) => {
             if (e.target.id === 'detailModal') closeDetail();
         });
 
         window.addEventListener('DOMContentLoaded', () => {
+            // 🔒 SICHERHEIT: Überprüfe Admin-Authentifizierung
+            const isAdminAuth = sessionStorage.getItem('admin_authenticated');
+            if (!isAdminAuth) {
+                // Nicht authentifiziert - zurück zur index.html
+                window.location.href = 'index.html';
+                return;
+            }
             loadAllUsers();
         });
 
