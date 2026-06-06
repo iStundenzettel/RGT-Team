@@ -724,7 +724,7 @@
                 const key = `stundenzettel_${userData.name}`;
                 localStorage.setItem(key, JSON.stringify(userData));
                 showSaveIndicator();
-                updateSaldo();
+                render(); // Komplette UI aktualisieren, nicht nur Saldo
             }, 500);
         }
 
@@ -741,7 +741,7 @@
             const key = `stundenzettel_${userData.name}`;
             localStorage.setItem(key, JSON.stringify(userData));
             showSaveIndicator();
-            updateSaldo();
+            render(); // Komplette UI aktualisieren
         }
 
         function backToToday() {
@@ -802,14 +802,14 @@
 
         function selectDateAndClose(year, month, day) {
             selectedDate = new Date(year, month, day);
-            render();
             closeCalendar();
+            render();
         }
 
         function openCalendar() {
             calendarDate = new Date(selectedDate);
+            renderCalendar();
             document.getElementById('calendarModal').classList.add('open');
-            render();
         }
 
         function closeCalendar() {
