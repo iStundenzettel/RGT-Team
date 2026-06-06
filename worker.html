@@ -97,6 +97,7 @@
             gap: 12px;
             font-size: 12px;
             opacity: 0.85;
+            flex-wrap: wrap;
         }
         .header-badge {
             background: rgba(255,255,255,0.15);
@@ -318,30 +319,36 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 0;
-            margin-bottom: 16px;
+            padding: 16px 0;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+            border-radius: 12px;
+            padding-left: 12px;
+            padding-right: 12px;
         }
         .month-nav-btn {
-            background: var(--grn-light);
-            border: 1px solid var(--grn);
-            color: var(--grn);
-            width: 36px;
-            height: 36px;
+            background: var(--grn);
+            border: none;
+            color: white;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
-            font-size: 18px;
+            font-size: 24px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
+            flex-shrink: 0;
         }
         .month-nav-btn:active {
-            background: var(--grn);
-            color: white;
+            background: var(--mid);
         }
         .month-title {
             font-size: 18px;
             font-weight: 700;
+            flex: 1;
+            text-align: center;
         }
         
         .calendar-header {
@@ -446,6 +453,7 @@
         <div class="header-name" id="userName">Mitarbeiter</div>
         <div class="header-info">
             <div class="header-badge" id="weekHours">31 Std. / Woche</div>
+            <div class="header-badge" id="saldo">Saldo: +0,00h</div>
         </div>
     </div>
 
@@ -585,9 +593,27 @@
             });
         }
 
+        function calculateSaldo() {
+            let total = 0;
+            for (const dateStr in entries) {
+                total += (entries[dateStr].hours || 0);
+            }
+            return Math.round(total * 100) / 100;
+        }
+
+        function updateSaldo() {
+            const saldo = calculateSaldo();
+            const sign = saldo < 0 ? '−' : '+';
+            const abs = Math.abs(saldo);
+            const hours = Math.floor(abs);
+            const mins = Math.round((abs - hours) * 60);
+            document.getElementById('saldo').textContent = `Saldo: ${sign}${hours},${String(mins).padStart(2, '0')}h`;
+        }
+
         function render() {
             renderToday();
             renderCalendar();
+            updateSaldo();
         }
 
         function renderToday() {
@@ -698,6 +724,7 @@
                 const key = `stundenzettel_${userData.name}`;
                 localStorage.setItem(key, JSON.stringify(userData));
                 showSaveIndicator();
+                updateSaldo();
             }, 500);
         }
 
@@ -714,6 +741,7 @@
             const key = `stundenzettel_${userData.name}`;
             localStorage.setItem(key, JSON.stringify(userData));
             showSaveIndicator();
+            updateSaldo();
         }
 
         function backToToday() {
@@ -816,7 +844,7 @@
             manualSave();
             alert('✉️ An Janine gesendet!');
             const janinData = {
-                name: 'Janine',
+                name: 'JANINE',
                 wochenstunden: 31,
                 schedule: [
                     {day: 'Montag', von: '08:00', bis: '15:00', team: false},
