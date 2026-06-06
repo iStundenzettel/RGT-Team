@@ -39,6 +39,7 @@
             padding: 20px 20px 30px;
             text-align: center;
             color: white;
+            position: relative;
         }
         .header-app {
             font-size: 11px;
@@ -74,6 +75,25 @@
             border-radius: 99px;
             font-weight: 600;
             border: 1px solid rgba(255,255,255,0.25);
+        }
+        
+        /* SAVE INDICATOR */
+        .save-indicator {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            background: rgba(255,255,255,0.9);
+            color: var(--grn);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .save-indicator.show {
+            opacity: 1;
         }
         
         /* CONTENT */
@@ -184,24 +204,34 @@
         .btn-plus:active {
             background: #a8e6a8;
         }
+        .btn-today {
+            background: #e3f2fd;
+            color: #1976d2;
+            flex: 1;
+            margin-left: auto;
+        }
+        .btn-today:active {
+            background: #bbdefb;
+        }
         
-        /* STATUS BUTTONS - KOMPAKT */
+        /* STATUS BUTTONS */
         .status-buttons {
             display: flex;
             gap: 8px;
             margin-bottom: 12px;
             justify-content: center;
+            flex-wrap: wrap;
         }
         .btn-status {
-            width: 48px;
-            height: 48px;
+            width: 44px;
+            height: 44px;
             padding: 0;
             border: 2px solid #ddd;
             border-radius: 12px;
             background: white;
             color: var(--txt);
             font-weight: 600;
-            font-size: 20px;
+            font-size: 18px;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
@@ -421,6 +451,7 @@
             <div class="header-badge" id="weekHours">31 Std. / Woche</div>
             <div class="header-saldo" id="saldo">Saldo: +0,00h</div>
         </div>
+        <div class="save-indicator" id="saveIndicator">✓ Gespeichert</div>
     </div>
 
     <div class="container">
@@ -446,12 +477,14 @@
             <div class="controls">
                 <button class="btn-ctrl btn-minus" onclick="addHours(-0.25)">−</button>
                 <button class="btn-ctrl btn-plus" onclick="addHours(+0.25)">+</button>
+                <button class="btn-ctrl btn-today" onclick="backToToday()" title="Zurück zu heute">📅</button>
             </div>
 
             <div class="status-buttons">
                 <button class="btn-status active" onclick="setStatus('normal')" id="btn-normal" title="Normal">✓</button>
                 <button class="btn-status" onclick="setStatus('frei')" id="btn-frei" title="Frei">⭐</button>
                 <button class="btn-status" onclick="setStatus('krank')" id="btn-krank" title="Krank">😷</button>
+                <button class="btn-status" onclick="setStatus('schule')" id="btn-schule" title="Schule">🚫</button>
             </div>
 
             <div class="notes-section">
@@ -490,25 +523,22 @@
         <button class="btn-footer btn-kalender" onclick="openCalendar()">📅</button>
         <button class="btn-footer btn-janine" onclick="saveJanine()" title="An Janine senden">✉️</button>
         <button class="btn-footer btn-teilen" onclick="openShare()">📤</button>
-        <button class="btn-footer btn-save" onclick="save()">💾</button>
+        <button class="btn-footer btn-save" onclick="manualSave()">💾</button>
     </div>
 
     <script>
-        // ============= GLOBALS =============
         let userData = null;
         let entries = {};
         let PLAN = {};
         let selectedDate = new Date();
         let calendarDate = new Date();
         let todayValue = 0;
+        let saveTimeout = null;
 
-        // ============= INIT =============
         function init() {
-            // Versuche, sessionStorage zu nutzen (von setup.html)
             let userName = sessionStorage.getItem('current_user');
             
             if (!userName) {
-                // Fallback: letzte Person aus localStorage
                 const names = Object.keys(localStorage).filter(k => k.startsWith('stundenzettel_'));
                 if (names.length === 0) {
                     window.location.href = 'index.html';
@@ -623,6 +653,7 @@
             todayValue = Math.round((todayValue + delta) * 100) / 100;
             updateTodayDisplay();
             saveEntry();
+            autoSave();
         }
 
         function setStatus(status) {
@@ -631,7 +662,7 @@
             
             entries[dateStr].status = status;
             
-            if (status === 'frei') {
+            if (status === 'frei' || status === 'schule') {
                 todayValue = -Math.abs(todayValue);
             } else if (status === 'krank') {
                 // Stunden bleiben
@@ -643,6 +674,7 @@
             updateTodayDisplay();
             updateStatusButtons(status);
             saveEntry();
+            autoSave();
             render();
         }
 
@@ -650,6 +682,7 @@
             document.getElementById('btn-normal').classList.toggle('active', status === 'normal');
             document.getElementById('btn-frei').classList.toggle('active', status === 'frei');
             document.getElementById('btn-krank').classList.toggle('active', status === 'krank');
+            document.getElementById('btn-schule').classList.toggle('active', status === 'schule');
         }
 
         function saveNotes() {
@@ -657,12 +690,43 @@
             if (!entries[dateStr]) entries[dateStr] = { hours: todayValue, status: 'normal', notes: '' };
             entries[dateStr].notes = document.getElementById('notesInput').value;
             saveEntry();
+            autoSave();
         }
 
         function saveEntry() {
             const dateStr = formatDate(selectedDate);
             entries[dateStr] = entries[dateStr] || { hours: todayValue, status: 'normal', notes: '' };
             entries[dateStr].hours = todayValue;
+        }
+
+        function autoSave() {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                userData.eintraege = entries;
+                const key = `stundenzettel_${userData.name}`;
+                localStorage.setItem(key, JSON.stringify(userData));
+                showSaveIndicator();
+            }, 500);
+        }
+
+        function showSaveIndicator() {
+            const indicator = document.getElementById('saveIndicator');
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
+
+        function manualSave() {
+            userData.eintraege = entries;
+            const key = `stundenzettel_${userData.name}`;
+            localStorage.setItem(key, JSON.stringify(userData));
+            showSaveIndicator();
+        }
+
+        function backToToday() {
+            selectedDate = new Date();
+            render();
         }
 
         function renderCalendar() {
@@ -696,10 +760,10 @@
                 const value = entry ? Math.abs(entry.hours) : 0;
                 const status = entry?.status || 'normal';
                 
-                // Farbcodierung
-                let bgColor = '#d4f5d4'; // normal = grün
-                if (status === 'frei') bgColor = '#ffcdd2'; // frei = rot
-                if (status === 'krank') bgColor = '#fff9c4'; // krank = gelb
+                let bgColor = '#d4f5d4';
+                if (status === 'frei') bgColor = '#ffcdd2';
+                if (status === 'krank') bgColor = '#fff9c4';
+                if (status === 'schule') bgColor = '#e0e0e0';
                 
                 const sign = entry && entry.hours < 0 ? '−' : '+';
                 const abs = Math.abs(value);
@@ -742,13 +806,6 @@
             renderCalendar();
         }
 
-        function save() {
-            userData.eintraege = entries;
-            const key = `stundenzettel_${userData.name}`;
-            localStorage.setItem(key, JSON.stringify(userData));
-            alert('✓ Gespeichert!');
-        }
-
         function openShare() {
             const text = `Stundenzettel:\n${Object.entries(entries).map(([d, e]) => {
                 const sign = e.hours < 0 ? '−' : '+';
@@ -766,6 +823,7 @@
         }
 
         function saveJanine() {
+            manualSave();
             alert('✉️ An Janine gesendet!');
             const janinData = {
                 name: 'Janine',
