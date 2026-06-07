@@ -182,13 +182,17 @@
         
         /* CONTROLS */
         .controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             gap: 12px;
             margin-bottom: 16px;
-            max-width: 160px;
-            margin-left: auto;
-            margin-right: auto;
+        }
+        
+        .controls > div {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
         }
         .btn-ctrl {
             width: 56px;
@@ -198,18 +202,10 @@
             font-size: 28px;
             cursor: pointer;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             font-weight: 700;
             transition: all 0.2s;
-        }
-        .btn-ctrl small {
-            font-size: 10px;
-            font-weight: 600;
-            line-height: 1;
-            margin-top: 2px;
-            opacity: 0.9;
         }
         .btn-minus {
             background: #ffcdd2;
@@ -488,10 +484,9 @@
             </div>
 
             <div class="controls">
-                <button class="btn-ctrl btn-minus" onclick="addHours(-0.5)">−<br><small>30 min</small></button>
-                <button class="btn-ctrl btn-minus" onclick="addHours(-0.25)">−<br><small>15 min</small></button>
-                <button class="btn-ctrl btn-plus" onclick="addHours(+0.25)">+<br><small>15 min</small></button>
-                <button class="btn-ctrl btn-plus" onclick="addHours(+0.5)">+<br><small>30 min</small></button>
+                <div class="change-indicator" id="changeIndicator" style="text-align: center; font-size: 12px; color: #666; margin-bottom: 8px; height: 20px;"></div>
+                <button class="btn-ctrl btn-minus" onclick="addHours(-0.5)">−</button>
+                <button class="btn-ctrl btn-plus" onclick="addHours(+0.5)">+</button>
             </div>
 
             <div class="status-buttons">
@@ -576,7 +571,8 @@
                 .join(' ');
             
             document.getElementById('userName').textContent = displayName;
-            document.getElementById('weekHours').textContent = userData.wochenstunden + ' Std. / Woche';
+            const weekHours = Math.round(userData.wochenstunden * 10) / 10;
+            document.getElementById('weekHours').textContent = weekHours.toLocaleString('de-DE') + ' Std. / Woche';
             
             selectedDate = new Date();
             calendarDate = new Date();
@@ -590,17 +586,11 @@
             userData.schedule.forEach(item => {
                 const dow = dayMap[item.day];
                 if (dow) {
-                    const [vonH, vonM] = (item.von || '08:00').split(':').map(Number);
-                    const [bisH, bisM] = (item.bis || '15:00').split(':').map(Number);
-                    const vonDec = vonH + vonM / 60;
-                    const bisDec = bisH + bisM / 60;
-                    const soll = Math.round((bisDec - vonDec - 0.5) * 100) / 100;
-                    
                     PLAN[dow] = {
                         day: item.day,
-                        von: item.von,
-                        bis: item.bis,
-                        soll: Math.max(0, soll)
+                        von: item.von || '08:00',
+                        bis: item.bis || '15:00',
+                        soll: item.soll || 0  // ← Benutze direkt die gespeicherten Stunden!
                     };
                 }
             });
@@ -685,6 +675,32 @@
             updateTodayDisplay();
             saveEntry();
             autoSave();
+            
+            // Zeige kleine Anzeige für die Änderung
+            const indicator = document.getElementById('changeIndicator');
+            const sign = delta > 0 ? '+' : '−';
+            const absMinutes = Math.round(Math.abs(delta) * 60);
+            const mins = absMinutes % 60;
+            const hours = Math.floor(absMinutes / 60);
+            
+            let text = '';
+            if (hours > 0) {
+                text = `${sign}${hours}h`;
+                if (mins > 0) text += ` ${mins}min`;
+            } else {
+                text = `${sign}${mins} min`;
+            }
+            
+            const color = delta > 0 ? '#3db356' : '#d9534f';
+            indicator.textContent = text;
+            indicator.style.color = color;
+            indicator.style.fontWeight = '600';
+            indicator.style.fontSize = '13px';
+            
+            // Entferne die Anzeige nach 2 Sekunden
+            setTimeout(() => {
+                indicator.textContent = '';
+            }, 2000);
         }
 
         function setStatus(status) {
