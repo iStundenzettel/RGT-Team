@@ -182,10 +182,13 @@
         
         /* CONTROLS */
         .controls {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
             margin-bottom: 16px;
+            max-width: 160px;
+            margin-left: auto;
+            margin-right: auto;
         }
         .btn-ctrl {
             width: 56px;
@@ -195,10 +198,18 @@
             font-size: 28px;
             cursor: pointer;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             font-weight: 700;
             transition: all 0.2s;
+        }
+        .btn-ctrl small {
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1;
+            margin-top: 2px;
+            opacity: 0.9;
         }
         .btn-minus {
             background: #ffcdd2;
@@ -477,8 +488,10 @@
             </div>
 
             <div class="controls">
-                <button class="btn-ctrl btn-minus" onclick="addHours(-0.25)">−</button>
-                <button class="btn-ctrl btn-plus" onclick="addHours(+0.25)">+</button>
+                <button class="btn-ctrl btn-minus" onclick="addHours(-0.5)">−<br><small>30 min</small></button>
+                <button class="btn-ctrl btn-minus" onclick="addHours(-0.25)">−<br><small>15 min</small></button>
+                <button class="btn-ctrl btn-plus" onclick="addHours(+0.25)">+<br><small>15 min</small></button>
+                <button class="btn-ctrl btn-plus" onclick="addHours(+0.5)">+<br><small>30 min</small></button>
             </div>
 
             <div class="status-buttons">
