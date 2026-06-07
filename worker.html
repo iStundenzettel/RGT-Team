@@ -1,866 +1,585 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <meta name="cache-control" content="no-cache, no-store, must-revalidate">
-    <title>Stundenzettel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Stundenzettel</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family:'Poppins',sans-serif;
+  background: linear-gradient(160deg, #0d2b14 0%, #2a7a3b 60%, #3db356 100%);
+  min-height:100vh;
+  padding-bottom:90px;
+}
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #0d2b14 0%, #3db356 100%);
-            min-height: 100vh;
-            padding: 20px 0 100px 0;
-        }
+/* HEADER */
+.header { text-align:center; color:white; padding:28px 20px 16px; }
+.header-sub { font-size:13px; letter-spacing:3px; opacity:0.8; margin-bottom:6px; }
+.header-name { font-size:44px; font-weight:800; margin-bottom:16px; }
+.header-org { font-size:13px; letter-spacing:2px; opacity:0.75; margin-bottom:14px; }
+.badges { display:flex; gap:10px; justify-content:center; }
+.badge {
+  background:rgba(255,255,255,0.18);
+  border:1px solid rgba(255,255,255,0.3);
+  padding:9px 18px; border-radius:20px;
+  font-size:14px; font-weight:600;
+}
 
-        .header {
-            text-align: center;
-            color: white;
-            padding: 20px;
-            margin-bottom: 10px;
-        }
+/* CARD */
+.card {
+  background:white; margin:14px 14px 0;
+  border-radius:22px; padding:22px;
+  box-shadow:0 6px 24px rgba(0,0,0,0.13);
+}
 
-        .header-name {
-            font-size: 42px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
+/* HEUTE BADGE + DATE */
+.card-top {
+  display:flex; justify-content:space-between; align-items:flex-start;
+  margin-bottom:16px;
+}
+.heute-badge {
+  background:#3db356; color:white;
+  padding:8px 16px; border-radius:20px;
+  font-size:12px; font-weight:700; letter-spacing:1px;
+}
+.date-selected-badge {
+  background:#4f9ff0; color:white;
+  padding:8px 16px; border-radius:20px;
+  font-size:14px; font-weight:700;
+  cursor:pointer;
+}
+.card-date-right { text-align:right; }
+.card-date-right .day { font-size:17px; font-weight:700; color:#222; }
+.card-date-right .time { font-size:13px; color:#888; margin-top:3px; }
 
-        .header-org {
-            font-size: 14px;
-            opacity: 0.9;
-            margin-bottom: 16px;
-            letter-spacing: 2px;
-        }
+/* STUNDEN ROW */
+.hours-row {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:6px;
+}
+.hours-value { font-size:56px; font-weight:800; color:#3db356; line-height:1; }
+.hours-value.negative { color:#d9534f; }
+.hours-unit { font-size:15px; color:#aaa; margin-top:6px; }
+.ctrl-btns { display:flex; gap:14px; }
+.btn-ctrl {
+  width:68px; height:68px; border:none; border-radius:50%;
+  font-size:34px; font-weight:700; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:transform 0.15s;
+}
+.btn-ctrl:active { transform:scale(0.92); }
+.btn-minus { background:#ffcccc; color:#c0392b; }
+.btn-plus  { background:#c8f0d4; color:#27ae60; }
 
-        .header-stats {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
+/* SOLL ROW */
+.soll-row {
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:13px; margin-bottom:10px;
+}
+.soll-label { color:#aaa; font-weight:500; }
+.soll-status { color:#3db356; font-weight:600; }
+.soll-status.over { color:#3db356; }
+.soll-status.under { color:#e67e22; }
+.soll-status.negative { color:#d9534f; }
 
-        .stat-badge {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-        }
+/* PROGRESS */
+.progress { height:7px; background:#eee; border-radius:4px; overflow:hidden; margin-bottom:20px; }
+.progress-fill { height:100%; background:linear-gradient(to right,#3db356,#27ae60); transition:width 0.3s; }
 
-        .card {
-            background: white;
-            margin: 16px;
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
+/* STATUS BUTTONS */
+.status-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:18px; }
+.btn-status {
+  padding:13px 0; border:2px solid #e0e0e0; background:white;
+  border-radius:14px; font-size:14px; font-weight:600;
+  cursor:pointer; transition:all 0.15s; color:#555;
+}
+.btn-status:active { transform:scale(0.96); }
+.btn-status.active { border-color:#3db356; background:#f0faf3; color:#27ae60; }
+.btn-status.active.rot { border-color:#d9534f; background:#fff0f0; color:#d9534f; }
 
-        .today-badge {
-            background: #3db356;
-            color: white;
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            letter-spacing: 1px;
-        }
+/* NOTES */
+.notes-label { font-size:12px; color:#bbb; font-weight:600; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
+.notes-input {
+  width:100%; padding:14px; border:1.5px solid #e8e8e8;
+  border-radius:14px; font-family:'Poppins',sans-serif;
+  font-size:14px; resize:none; min-height:100px; color:#333;
+}
+.notes-input:focus { outline:none; border-color:#3db356; }
 
-        .today-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-        }
+/* NÄCHSTER TERMIN */
+.next-card {
+  background:linear-gradient(135deg,#1a4a28,#3db356);
+  margin:14px 14px 0; border-radius:18px; padding:18px 20px;
+  color:white;
+}
+.next-label { font-size:11px; letter-spacing:2px; opacity:0.85; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+.next-content { display:flex; justify-content:space-between; align-items:center; }
+.next-date { font-size:14px; opacity:0.9; }
+.next-name { font-size:18px; font-weight:700; margin-top:3px; }
+.next-countdown { background:rgba(255,255,255,0.2); padding:8px 14px; border-radius:14px; font-size:13px; font-weight:600; }
 
-        .today-date {
-            font-size: 18px;
-            font-weight: 700;
-            color: #333;
-        }
+/* FOOTER */
+.footer {
+  position:fixed; bottom:0; left:0; right:0;
+  display:flex; justify-content:space-around;
+  background:linear-gradient(to top,#0a1f0e 70%,rgba(10,31,14,0.85));
+  padding:14px 0 22px;
+}
+.btn-footer {
+  width:52px; height:52px; border:none; border-radius:14px;
+  font-size:26px; cursor:pointer;
+  background:rgba(255,255,255,0.12); transition:all 0.15s;
+}
+.btn-footer.active-fn { background:rgba(220,50,50,0.6); }
+.btn-footer:active { transform:scale(0.93); background:rgba(255,255,255,0.22); }
 
-        .today-time {
-            font-size: 14px;
-            color: #666;
-            margin-top: 4px;
-        }
+/* SAVE TOAST */
+.toast {
+  position:fixed; top:16px; left:50%; transform:translateX(-50%);
+  background:#27ae60; color:white; padding:10px 22px;
+  border-radius:20px; font-size:13px; font-weight:600;
+  opacity:0; transition:opacity 0.3s; pointer-events:none; z-index:999;
+}
+.toast.show { opacity:1; }
 
-        .today-main {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .today-hours {
-            font-size: 48px;
-            font-weight: 700;
-            color: #3db356;
-            line-height: 1;
-        }
-
-        .today-hours-label {
-            font-size: 14px;
-            color: #999;
-            margin-top: 4px;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 16px;
-        }
-
-        .btn-ctrl {
-            width: 64px;
-            height: 64px;
-            border: none;
-            border-radius: 50%;
-            font-size: 32px;
-            cursor: pointer;
-            font-weight: 700;
-            transition: transform 0.2s, box-shadow 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-minus {
-            background: #ffcccc;
-            color: #d9534f;
-        }
-
-        .btn-minus:active {
-            transform: scale(0.95);
-            box-shadow: 0 4px 12px rgba(217, 83, 79, 0.3);
-        }
-
-        .btn-plus {
-            background: #ccf0dd;
-            color: #3db356;
-        }
-
-        .btn-plus:active {
-            transform: scale(0.95);
-            box-shadow: 0 4px 12px rgba(61, 179, 86, 0.3);
-        }
-
-        .progress-bar {
-            height: 8px;
-            background: #eee;
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 16px 0;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(to right, #3db356, #2ba845);
-            transition: width 0.3s;
-        }
-
-        .status-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        .btn-status {
-            padding: 12px;
-            border: 2px solid #ddd;
-            background: white;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: #333;
-        }
-
-        .btn-status.active {
-            border-color: #3db356;
-            background: #f0f9f4;
-            color: #3db356;
-        }
-
-        .next-appointment {
-            background: linear-gradient(135deg, #2b5a3b 0%, #3db356 100%);
-            color: white;
-            padding: 16px;
-            border-radius: 16px;
-            margin: 16px 0;
-        }
-
-        .next-appointment-label {
-            font-size: 12px;
-            opacity: 0.9;
-            margin-bottom: 8px;
-            letter-spacing: 1px;
-        }
-
-        .next-appointment-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .next-appointment-date {
-            font-size: 14px;
-        }
-
-        .next-appointment-name {
-            font-size: 16px;
-            font-weight: 700;
-            margin-top: 4px;
-        }
-
-        .next-appointment-countdown {
-            font-size: 12px;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 6px 12px;
-            border-radius: 12px;
-        }
-
-        .notes-section {
-            margin-top: 20px;
-        }
-
-        .notes-label {
-            font-size: 12px;
-            color: #999;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-        }
-
-        .notes-input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 14px;
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .notes-input::placeholder {
-            color: #ccc;
-        }
-
-        .footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: space-around;
-            background: linear-gradient(to top, #0d2b14 80%, rgba(13, 43, 20, 0.8));
-            padding: 16px 0 20px 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .btn-footer {
-            width: 50px;
-            height: 50px;
-            border: none;
-            border-radius: 12px;
-            font-size: 24px;
-            cursor: pointer;
-            background: rgba(61, 179, 86, 0.3);
-            color: white;
-            transition: all 0.2s;
-        }
-
-        .btn-footer:active {
-            background: rgba(61, 179, 86, 0.5);
-            transform: scale(0.95);
-        }
-
-        .save-indicator {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            background: #3db356;
-            color: white;
-            padding: 10px 16px;
-            border-radius: 12px;
-            font-size: 12px;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .save-indicator.show {
-            opacity: 1;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            z-index: 1000;
-        }
-
-        .modal.open {
-            display: flex;
-            align-items: flex-end;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 24px 24px 0 0;
-            padding: 24px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-size: 22px;
-            font-weight: 700;
-        }
-
-        .modal-close {
-            background: #f0f0f0;
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            font-size: 18px;
-            cursor: pointer;
-            color: #666;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .month-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .month-nav-btn {
-            background: #f0f0f0;
-            border: none;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            font-size: 22px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .month-title {
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .calendar-header {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 4px;
-            margin-bottom: 8px;
-        }
-
-        .calendar-day-header {
-            text-align: center;
-            font-size: 13px;
-            color: #999;
-            font-weight: 600;
-            padding: 8px 0;
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 6px;
-        }
-
-        .calendar-day {
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 17px;
-            font-weight: 600;
-            transition: all 0.15s;
-            min-height: 52px;
-        }
-
-        .calendar-day:active {
-            transform: scale(0.9);
-            background: #e0f5e8;
-        }
-
-        .calendar-day.today {
-            background: #3db356;
-            color: white;
-        }
-
-        .calendar-day.selected {
-            border: 3px solid #3db356;
-            color: #3db356;
-        }
-
-        .calendar-day.has-entry {
-            position: relative;
-        }
-
-        .calendar-day.has-entry::after {
-            content: '';
-            position: absolute;
-            bottom: 4px;
-            width: 6px;
-            height: 6px;
-            background: #3db356;
-            border-radius: 50%;
-        }
-
-        .btn-heute {
-            width: 100%;
-            padding: 14px;
-            background: #3db356;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            margin-top: 16px;
-            cursor: pointer;
-        }
-    </style>
+/* CALENDAR MODAL */
+.modal {
+  display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.55); z-index:1000;
+  align-items:flex-end;
+}
+.modal.open { display:flex; }
+.modal-box {
+  background:white; width:100%; border-radius:24px 24px 0 0;
+  padding:22px 20px 30px; max-height:85vh; overflow-y:auto;
+}
+.modal-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+.modal-title { font-size:20px; font-weight:700; }
+.btn-close { background:#f0f0f0; border:none; width:34px; height:34px; border-radius:50%; font-size:18px; cursor:pointer; }
+.month-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.month-nav-btn { background:#f0f0f0; border:none; width:44px; height:44px; border-radius:50%; font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.month-name { font-size:19px; font-weight:700; }
+.cal-headers { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; margin-bottom:6px; }
+.cal-hd { text-align:center; font-size:12px; color:#aaa; font-weight:600; padding:6px 0; }
+.cal-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+.cal-day {
+  aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+  border-radius:50%; cursor:pointer; font-size:16px; font-weight:600;
+  min-height:50px; color:#333; transition:background 0.1s;
+  position:relative;
+}
+.cal-day:active { background:#e0f5e8; }
+.cal-day.other-month { opacity:0.25; }
+.cal-day.is-today { background:#3db356; color:white; }
+.cal-day.is-selected { box-shadow:0 0 0 3px #3db356; }
+.cal-day.has-entry::after {
+  content:''; position:absolute; bottom:4px;
+  width:5px; height:5px; background:#3db356; border-radius:50%;
+}
+.cal-day.is-today.has-entry::after { background:white; }
+.btn-heute {
+  width:100%; margin-top:16px; padding:14px;
+  background:#3db356; color:white; border:none;
+  border-radius:14px; font-size:16px; font-weight:700; cursor:pointer;
+}
+</style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-name" id="userName">Marc Hoss</div>
-        <div class="header-org">RGT · AWO</div>
-        <div class="header-stats">
-            <div class="stat-badge" id="weekHours">31 Std. / Woche</div>
-            <div class="stat-badge" id="saldoBadge">Saldo: +0,00h</div>
-        </div>
+
+<div class="header">
+  <div class="header-sub">STUNDENZETTEL</div>
+  <div class="header-name" id="userName">Marc Hoss</div>
+  <div class="header-org">RGT · AWO</div>
+  <div class="badges">
+    <div class="badge" id="weekHours">31 Std. / Woche</div>
+    <div class="badge" id="saldoBadge">Saldo: +0h</div>
+  </div>
+</div>
+
+<div class="card" id="mainCard">
+  <div class="card-top">
+    <div class="heute-badge" id="heuteBadge">HEUTE</div>
+    <div class="card-date-right">
+      <div class="day" id="cardDay">Mo, 8. Juni</div>
+      <div class="time" id="cardTime">–:–</div>
     </div>
+  </div>
 
-    <div id="mainContent">
-        <!-- HEUTE Card -->
-        <div class="card">
-            <div class="today-badge">HEUTE</div>
-            <div class="today-header">
-                <div>
-                    <div class="today-date" id="todayDay">Mi, 3. Juni</div>
-                    <div class="today-time" id="todayTime">8:00–13:30</div>
-                </div>
-            </div>
-
-            <div class="today-main">
-                <div>
-                    <div class="today-hours" id="todayHours">5,30</div>
-                    <div class="today-hours-label">Std.</div>
-                </div>
-                <div class="button-group">
-                    <button class="btn-ctrl btn-minus" onclick="addHours(-0.5)">−</button>
-                    <button class="btn-ctrl btn-plus" onclick="addHours(+0.5)">+</button>
-                </div>
-            </div>
-
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill" style="width: 50%"></div>
-            </div>
-
-            <div class="status-buttons">
-                <button class="btn-status active" onclick="setStatus('normal')" id="btn-normal">✓ Normal</button>
-                <button class="btn-status" onclick="setStatus('frei')" id="btn-frei">⭐ Frei</button>
-                <button class="btn-status" onclick="setStatus('krank')" id="btn-krank">😷 Krank</button>
-                <button class="btn-status" onclick="setStatus('schule')" id="btn-schule">🚫 Schule</button>
-            </div>
-
-            <div class="next-appointment">
-                <div class="next-appointment-label">📅 NÄCHSTER TERMIN</div>
-                <div class="next-appointment-content">
-                    <div>
-                        <div class="next-appointment-date" id="nextDate">11. Juni 2026</div>
-                        <div class="next-appointment-name" id="nextName">Annika</div>
-                    </div>
-                    <div class="next-appointment-countdown" id="nextCountdown">in 8 Tagen</div>
-                </div>
-            </div>
-
-            <div class="notes-section">
-                <div class="notes-label">📝 BEMERKUNGEN</div>
-                <textarea class="notes-input" id="notesInput" placeholder="Notizen zu diesem Tag..." onchange="saveNotes()"></textarea>
-            </div>
-        </div>
+  <div class="hours-row">
+    <div>
+      <div class="hours-value" id="hoursVal">0,00</div>
+      <div class="hours-unit">Std.</div>
     </div>
-
-    <div id="calendarModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">Kalender</div>
-                <button class="modal-close" onclick="closeCalendar()">×</button>
-            </div>
-            <div class="month-nav">
-                <button class="month-nav-btn" onclick="prevMonth()">‹</button>
-                <div class="month-title" id="monthTitle">Juni 2026</div>
-                <button class="month-nav-btn" onclick="nextMonth()">›</button>
-            </div>
-            <div class="calendar-header">
-                <div class="calendar-day-header">Mo</div>
-                <div class="calendar-day-header">Di</div>
-                <div class="calendar-day-header">Mi</div>
-                <div class="calendar-day-header">Do</div>
-                <div class="calendar-day-header">Fr</div>
-            </div>
-            <div class="calendar-grid" id="calendarGrid"></div>
-            <button class="btn-heute" onclick="goToToday()">↩ Zurück zu Heute</button>
-        </div>
+    <div class="ctrl-btns">
+      <button class="btn-ctrl btn-minus" onclick="addHours(-0.5)">−</button>
+      <button class="btn-ctrl btn-plus"  onclick="addHours(+0.5)">+</button>
     </div>
+  </div>
 
-    <div class="footer">
-        <button class="btn-footer" onclick="openCalendar()">📅</button>
-        <button class="btn-footer" onclick="saveJanine()">✉️</button>
-        <button class="btn-footer" onclick="openShare()">📤</button>
-        <button class="btn-footer" onclick="manualSave()">💾</button>
+  <div class="soll-row">
+    <span class="soll-label" id="sollLabel">Soll: 0,00h</span>
+    <span class="soll-status" id="sollStatus">–</span>
+  </div>
+
+  <div class="progress"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+
+  <div class="status-row">
+    <button class="btn-status" id="btn-frei"   onclick="setStatus('frei')">⭐ Frei</button>
+    <button class="btn-status" id="btn-krank"  onclick="setStatus('krank')">😷 Krank</button>
+    <button class="btn-status" id="btn-schule" onclick="setStatus('schule')">🚫 Schule</button>
+  </div>
+
+  <div class="notes-label">📝 Bemerkungen</div>
+  <textarea class="notes-input" id="notesInput" placeholder="Notizen zu diesem Tag..."></textarea>
+</div>
+
+<!-- Nächster Termin – nur Hauptseite -->
+<div class="next-card" id="nextCard">
+  <div class="next-label">📅 NÄCHSTER TERMIN</div>
+  <div class="next-content">
+    <div>
+      <div class="next-date" id="nextDate">–</div>
+      <div class="next-name" id="nextName">–</div>
     </div>
+    <div class="next-countdown" id="nextCountdown">–</div>
+  </div>
+</div>
 
-    <div class="save-indicator" id="saveIndicator">Gespeichert ✓</div>
+<div class="footer">
+  <button class="btn-footer" onclick="openCalendar()">📅</button>
+  <button class="btn-footer" id="btnMail" onclick="shareJanine()">✉️</button>
+  <button class="btn-footer" onclick="shareNative()">📤</button>
+  <button class="btn-footer" onclick="manualSave()">💾</button>
+</div>
 
-    <script>
-        let userData = null;
-        let entries = {};
-        let PLAN = {};
-        let selectedDate = new Date();
-        let calendarDate = new Date();
-        let todayValue = 0;
-        let saveTimeout = null;
+<div class="toast" id="toast">Gespeichert ✓</div>
 
-        function init() {
-            let userName = localStorage.getItem('last_stundenzettel_user');
-            
-            if (!userName) {
-                const names = Object.keys(localStorage).filter(k => k.startsWith('stundenzettel_'));
-                if (names.length === 0) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-                userName = names[names.length - 1].replace('stundenzettel_', '');
-            }
+<!-- KALENDER MODAL -->
+<div class="modal" id="calModal">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div class="modal-title">Kalender</div>
+      <button class="btn-close" onclick="closeCalendar()">✕</button>
+    </div>
+    <div class="month-nav">
+      <button class="month-nav-btn" onclick="prevMonth()">‹</button>
+      <div class="month-name" id="monthName">Juni 2026</div>
+      <button class="month-nav-btn" onclick="nextMonth()">›</button>
+    </div>
+    <div class="cal-headers">
+      <div class="cal-hd">Mo</div>
+      <div class="cal-hd">Di</div>
+      <div class="cal-hd">Mi</div>
+      <div class="cal-hd">Do</div>
+      <div class="cal-hd">Fr</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <button class="btn-heute" onclick="goToToday()">↩ Zurück zu Heute</button>
+  </div>
+</div>
 
-            userData = JSON.parse(localStorage.getItem(`stundenzettel_${userName}`));
-            if (!userData) {
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            entries = userData.eintraege || {};
-            buildPlan();
-            
-            const displayName = userData.name
-                .split('_')
-                .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-                .join(' ');
-            
-            document.getElementById('userName').textContent = displayName;
-            const weekHours = Math.round(userData.wochenstunden * 10) / 10;
-            document.getElementById('weekHours').textContent = weekHours.toLocaleString('de-DE') + ' Std. / Woche';
-            
-            selectedDate = new Date();
-            calendarDate = new Date();
-            render();
-        }
+<script>
+// ─── STATE ───────────────────────────────────────────────
+let userData = null, entries = {}, PLAN = {};
+let selectedDate = new Date();
+let calDate = new Date();
+let todayVal = 0;
+let saveTimer = null;
 
-        function buildPlan() {
-            const dayMap = { 'Montag': 1, 'Dienstag': 2, 'Mittwoch': 3, 'Donnerstag': 4, 'Freitag': 5 };
-            PLAN = {};
-            
-            userData.schedule.forEach(item => {
-                const dow = dayMap[item.day];
-                if (dow) {
-                    PLAN[dow] = {
-                        day: item.day,
-                        von: item.von || '08:00',
-                        bis: item.bis || '15:00',
-                        soll: item.soll || 0
-                    };
-                }
-            });
-        }
+const TODAY = new Date();
+TODAY.setHours(0,0,0,0);
 
-        function calculateSaldo() {
-            let total = 0;
-            for (const dateStr in entries) {
-                const entry = entries[dateStr];
-                const date = new Date(dateStr + 'T00:00:00');
-                const dayOfWeek = date.getDay();
-                const planDay = PLAN[dayOfWeek] || PLAN[dayOfWeek === 0 ? 7 : dayOfWeek];
-                const soll = planDay ? planDay.soll : 0;
-                
-                // Berechne Differenz: Aktuell - Soll
-                let diff = entry.hours || 0;
-                
-                // Wenn Status "Schule" oder "Frei", dann ist es Minus (keine Arbeit)
-                // Aber wir verwenden die absolute Differenz
-                if (entry.status === 'schule' || entry.status === 'frei') {
-                    diff = -Math.abs(diff - soll);
-                } else {
-                    diff = diff - soll;
-                }
-                
-                total += diff;
-            }
-            return Math.round(total * 100) / 100;
-        }
+// ─── INIT ────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  let name = localStorage.getItem('last_stundenzettel_user');
+  if (!name) {
+    const keys = Object.keys(localStorage).filter(k => k.startsWith('stundenzettel_'));
+    if (!keys.length) { location.href='index.html'; return; }
+    name = keys[0].replace('stundenzettel_','');
+  }
+  userData = JSON.parse(localStorage.getItem('stundenzettel_'+name)||'null');
+  if (!userData) { location.href='index.html'; return; }
 
-        function updateSaldo() {
-            const saldo = calculateSaldo();
-            const sign = saldo >= 0 ? '+' : '';
-            document.getElementById('saldoBadge').textContent = `Saldo: ${sign}${saldo.toLocaleString('de-DE')}h`;
-        }
+  entries = userData.eintraege || {};
+  buildPlan();
 
-        function formatDate(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
+  // Anzeige-Name
+  const dn = name.split('_').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ');
+  document.getElementById('userName').textContent = dn;
+  document.getElementById('weekHours').textContent =
+    (+userData.wochenstunden).toLocaleString('de-DE') + ' Std. / Woche';
 
-        function renderToday() {
-            const dateStr = formatDate(selectedDate);
-            const dayOfWeek = selectedDate.getDay();
-            const planDay = PLAN[dayOfWeek] || PLAN[dayOfWeek === 0 ? 7 : dayOfWeek];
-            
-            const dayName = selectedDate.toLocaleDateString('de-DE', { weekday: 'short' });
-            const dayNum = selectedDate.getDate();
-            const monthName = selectedDate.toLocaleDateString('de-DE', { month: 'long' });
-            
-            document.getElementById('todayDay').textContent = `${dayName.charAt(0).toUpperCase() + dayName.slice(1)}, ${dayNum}. ${monthName}`;
-            
-            if (planDay) {
-                document.getElementById('todayTime').textContent = `${planDay.von}–${planDay.bis}`;
-                todayValue = planDay.soll;
-            } else {
-                document.getElementById('todayTime').textContent = '–:–';
-                todayValue = 0;
-            }
+  renderNextAppointment();
+  render();
+});
 
-            if (!entries[dateStr]) {
-                entries[dateStr] = { hours: todayValue, status: 'normal', notes: '' };
-            }
+// ─── PLAN ────────────────────────────────────────────────
+function buildPlan() {
+  const map = {Montag:1,Dienstag:2,Mittwoch:3,Donnerstag:4,Freitag:5};
+  PLAN = {};
+  (userData.schedule||[]).forEach(s => {
+    const d = map[s.day];
+    if (d) PLAN[d] = { von:s.von||'08:00', bis:s.bis||'15:00', soll:parseFloat(s.soll)||0 };
+  });
+}
 
-            const entry = entries[dateStr];
-            todayValue = entry.hours !== undefined ? entry.hours : todayValue;
-            
-            updateTodayDisplay();
-            updateStatusButtons(entry.status || 'normal');
-            document.getElementById('notesInput').value = entry.notes || '';
-        }
+// ─── DATE HELPERS ────────────────────────────────────────
+function fmtDate(d) {
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
 
-        function updateTodayDisplay() {
-            const sign = todayValue < 0 ? '−' : '';
-            const abs = Math.abs(todayValue);
-            const hours = Math.floor(abs);
-            const mins = Math.round((abs - hours) * 60);
-            
-            document.getElementById('todayHours').textContent = `${sign}${hours},${String(mins).padStart(2, '0')}`;
-            
-            const maxHours = userData.wochenstunden / 5;
-            const percent = Math.min(100, (todayValue / maxHours) * 100);
-            document.getElementById('progressFill').style.width = percent + '%';
-        }
+// ─── RENDER ──────────────────────────────────────────────
+function render() {
+  const ds = fmtDate(selectedDate);
+  const dow = selectedDate.getDay(); // 0=So,1=Mo,...,5=Fr,6=Sa
+  const plan = PLAN[dow];
 
-        function addHours(delta) {
-            todayValue = Math.round((todayValue + delta) * 100) / 100;
-            updateTodayDisplay();
-            saveEntry();
-            autoSave();
-        }
+  // Header-Datum
+  const isToday = fmtDate(selectedDate) === fmtDate(new Date());
+  const dayStr = selectedDate.toLocaleDateString('de-DE',{weekday:'short'});
+  const datStr = selectedDate.getDate()+'. '+selectedDate.toLocaleDateString('de-DE',{month:'long'});
+  document.getElementById('cardDay').textContent = dayStr.replace('.','')+', '+datStr;
+  document.getElementById('cardTime').textContent = plan ? plan.von+'–'+plan.bis : '–:–';
 
-        function setStatus(status) {
-            const dateStr = formatDate(selectedDate);
-            const dayOfWeek = selectedDate.getDay();
-            const planDay = PLAN[dayOfWeek];
-            const sollStunden = planDay ? planDay.soll : 0;
+  // HEUTE Badge
+  const badge = document.getElementById('heuteBadge');
+  if (isToday) {
+    badge.textContent = 'HEUTE';
+    badge.style.background = '#3db356';
+  } else {
+    badge.textContent = selectedDate.toLocaleDateString('de-DE',{day:'numeric',month:'short'});
+    badge.style.background = '#4f9ff0';
+  }
 
-            if (!entries[dateStr]) entries[dateStr] = { hours: sollStunden, status: 'normal', notes: '' };
-            
-            entries[dateStr].status = status;
+  // Soll
+  const soll = plan ? plan.soll : 0;
 
-            if (status === 'schule' || status === 'frei') {
-                todayValue = -Math.abs(sollStunden);
-            } else {
-                todayValue = Math.abs(sollStunden);
-            }
+  // Entry laden oder neu erstellen
+  if (!entries[ds]) {
+    entries[ds] = { hours: soll, status:'normal', notes:'' };
+  }
+  const entry = entries[ds];
+  todayVal = entry.hours;
 
-            entries[dateStr].hours = todayValue;
-            updateTodayDisplay();
-            updateStatusButtons(status);
-            saveEntry();
-            autoSave();
-        }
+  updateDisplay(soll);
+  updateStatusBtns(entry.status||'normal');
+  document.getElementById('notesInput').value = entry.notes||'';
+  updateSaldo();
 
-        function updateStatusButtons(status) {
-            document.getElementById('btn-normal').classList.toggle('active', status === 'normal');
-            document.getElementById('btn-frei').classList.toggle('active', status === 'frei');
-            document.getElementById('btn-krank').classList.toggle('active', status === 'krank');
-            document.getElementById('btn-schule').classList.toggle('active', status === 'schule');
-        }
+  // Notes: sofort speichern bei Eingabe
+  const ni = document.getElementById('notesInput');
+  ni.oninput = () => {
+    entries[ds].notes = ni.value;
+    scheduleSave();
+  };
+}
 
-        function saveNotes() {
-            const dateStr = formatDate(selectedDate);
-            if (!entries[dateStr]) entries[dateStr] = { hours: todayValue, status: 'normal', notes: '' };
-            entries[dateStr].notes = document.getElementById('notesInput').value;
-            saveEntry();
-            autoSave();
-        }
+function updateDisplay(soll) {
+  const abs = Math.abs(todayVal);
+  const h = Math.floor(abs);
+  const m = Math.round((abs-h)*60);
+  const neg = todayVal < 0;
+  const valEl = document.getElementById('hoursVal');
+  valEl.textContent = (neg ? '−' : '')+h+','+String(m).padStart(2,'0');
+  valEl.className = 'hours-value'+(neg?' negative':'');
 
-        function saveEntry() {
-            const dateStr = formatDate(selectedDate);
-            entries[dateStr] = entries[dateStr] || { hours: todayValue, status: 'normal', notes: '' };
-            entries[dateStr].hours = todayValue;
-        }
+  // Soll-Zeile
+  const sollH = Math.floor(soll), sollM = Math.round((soll-sollH)*60);
+  document.getElementById('sollLabel').textContent =
+    'Soll: '+sollH+','+String(sollM).padStart(2,'0')+'h';
 
-        function autoSave() {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                userData.eintraege = entries;
-                const key = `stundenzettel_${userData.name}`;
-                localStorage.setItem(key, JSON.stringify(userData));
-                showSaveIndicator();
-                updateSaldo();
-            }, 500);
-        }
+  const diff = Math.round((todayVal - soll)*100)/100;
+  const stEl = document.getElementById('sollStatus');
+  if (todayVal < 0) {
+    stEl.textContent = '✗ kein Dienst';
+    stEl.className = 'soll-status negative';
+  } else if (diff > 0) {
+    stEl.textContent = '+'+diff.toLocaleString('de-DE')+'h mehr';
+    stEl.className = 'soll-status over';
+  } else if (diff < 0) {
+    stEl.textContent = diff.toLocaleString('de-DE')+'h weniger';
+    stEl.className = 'soll-status under';
+  } else {
+    stEl.textContent = '✓ genau';
+    stEl.className = 'soll-status';
+  }
 
-        function showSaveIndicator() {
-            const indicator = document.getElementById('saveIndicator');
-            indicator.classList.add('show');
-            setTimeout(() => {
-                indicator.classList.remove('show');
-            }, 2000);
-        }
+  const pct = soll > 0 ? Math.max(0,Math.min(100,(todayVal/soll)*100)) : 0;
+  document.getElementById('progFill').style.width = pct+'%';
+}
 
-        function manualSave() {
-            userData.eintraege = entries;
-            const key = `stundenzettel_${userData.name}`;
-            localStorage.setItem(key, JSON.stringify(userData));
-            showSaveIndicator();
-            updateSaldo();
-        }
+// ─── STATUS ──────────────────────────────────────────────
+function setStatus(status) {
+  const ds = fmtDate(selectedDate);
+  const dow = selectedDate.getDay();
+  const soll = PLAN[dow] ? PLAN[dow].soll : 0;
 
-        function openCalendar() {
-            calendarDate = new Date(selectedDate);
-            renderCalendar();
-            document.getElementById('calendarModal').classList.add('open');
-        }
+  if (!entries[ds]) entries[ds] = {hours:soll, status:'normal', notes:''};
 
-        function closeCalendar() {
-            document.getElementById('calendarModal').classList.remove('open');
-        }
+  if (status === 'schule' || status === 'frei') {
+    todayVal = -soll;
+  } else {
+    // Krank: Stunden bleiben, oder auf Soll setzen wenn 0
+    if (todayVal <= 0) todayVal = soll;
+  }
 
-        function renderCalendar() {
-            const year = calendarDate.getFullYear();
-            const month = calendarDate.getMonth();
-            
-            document.getElementById('monthTitle').textContent = 
-                calendarDate.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
-            
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const startDate = new Date(firstDay);
-            startDate.setDate(startDate.getDate() - (firstDay.getDay() || 7) + 1);
-            
-            let html = '';
-            for (let i = 0; i < 35; i++) {
-                const date = new Date(startDate);
-                date.setDate(date.getDate() + i);
-                
-                const isThisMonth = date.getMonth() === month;
-                const isToday = formatDate(date) === formatDate(new Date());
-                const isSelected = formatDate(date) === formatDate(selectedDate);
-                
-                html += `<div class="calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" 
-                    onclick="selectDateAndClose(${date.getFullYear()}, ${date.getMonth()}, ${date.getDate()})"
-                    style="${!isThisMonth ? 'opacity: 0.3;' : ''}">
-                    ${date.getDate()}
-                </div>`;
-            }
-            
-            document.getElementById('calendarGrid').innerHTML = html;
-        }
+  entries[ds].status = status;
+  entries[ds].hours = todayVal;
 
-        function selectDateAndClose(year, month, day) {
-            selectedDate = new Date(year, month, day);
-            closeCalendar();
-            render();
-        }
+  updateDisplay(soll);
+  updateStatusBtns(status);
+  scheduleSave();
+}
 
-        function prevMonth() {
-            calendarDate.setMonth(calendarDate.getMonth() - 1);
-            renderCalendar();
-        }
+function updateStatusBtns(status) {
+  ['frei','krank','schule'].forEach(s => {
+    const b = document.getElementById('btn-'+s);
+    b.classList.toggle('active', status === s);
+    if (status === s && (s==='schule'||s==='frei')) b.classList.add('rot');
+    else b.classList.remove('rot');
+  });
+}
 
-        function nextMonth() {
-            calendarDate.setMonth(calendarDate.getMonth() + 1);
-            renderCalendar();
-        }
+// ─── HOURS ───────────────────────────────────────────────
+function addHours(delta) {
+  const ds = fmtDate(selectedDate);
+  const dow = selectedDate.getDay();
+  const soll = PLAN[dow] ? PLAN[dow].soll : 0;
 
-        function saveJanine() {
-            const dateStr = formatDate(selectedDate);
-            const entry = entries[dateStr] || { hours: 0, status: 'normal', notes: '' };
-            const msg = `${formatDate(selectedDate)}: ${entry.hours}h (${entry.status})\n${entry.notes}`;
-            alert('An Janine:\n\n' + msg);
-        }
+  todayVal = Math.round((todayVal + delta)*100)/100;
+  if (!entries[ds]) entries[ds] = {hours:soll, status:'normal', notes:''};
+  entries[ds].hours = todayVal;
 
-        function openShare() {
-            const dateStr = formatDate(selectedDate);
-            const entry = entries[dateStr] || { hours: 0, status: 'normal', notes: '' };
-            const msg = `Stundenzettel ${formatDate(selectedDate)}: ${entry.hours}h`;
-            
-            if (navigator.share) {
-                navigator.share({ title: 'Stundenzettel', text: msg });
-            } else {
-                alert('Teilen: ' + msg);
-            }
-        }
+  // Status zurück auf normal wenn positiv
+  if (todayVal >= 0 && entries[ds].status !== 'krank') {
+    entries[ds].status = 'normal';
+    updateStatusBtns('normal');
+  }
 
-        function goToToday() {
-            selectedDate = new Date();
-            closeCalendar();
-            render();
-        }
+  updateDisplay(soll);
+  scheduleSave();
+}
 
-        function render() {
-            renderToday();
-            updateSaldo();
-        }
+// ─── SALDO ───────────────────────────────────────────────
+function updateSaldo() {
+  let saldo = 0;
+  Object.entries(entries).forEach(([ds, entry]) => {
+    const d = new Date(ds+'T12:00:00');
+    const dow = d.getDay();
+    const plan = PLAN[dow];
+    if (!plan) return;
+    const soll = plan.soll;
+    // Differenz: was gearbeitet minus was geplant
+    saldo += (entry.hours||0) - soll;
+  });
+  saldo = Math.round(saldo*100)/100;
+  const sign = saldo >= 0 ? '+' : '';
+  document.getElementById('saldoBadge').textContent =
+    'Saldo: '+sign+saldo.toLocaleString('de-DE')+'h';
+}
 
-        // Init beim Start
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
+// ─── SAVE ────────────────────────────────────────────────
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 600);
+}
+
+function doSave() {
+  userData.eintraege = entries;
+  localStorage.setItem('stundenzettel_'+userData.name, JSON.stringify(userData));
+  showToast('Gespeichert ✓');
+  updateSaldo();
+}
+
+function manualSave() { doSave(); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+// ─── NEXT APPOINTMENT ────────────────────────────────────
+function renderNextAppointment() {
+  // Einfach: zeige nächsten Schultag/Ereignis falls vorhanden
+  // Placeholder – kann später mit echten Terminen gefüllt werden
+  document.getElementById('nextCard').style.display = 'none';
+}
+
+// ─── CALENDAR ────────────────────────────────────────────
+function openCalendar() {
+  calDate = new Date(selectedDate);
+  renderCal();
+  document.getElementById('calModal').classList.add('open');
+}
+
+function closeCalendar() {
+  document.getElementById('calModal').classList.remove('open');
+}
+
+function goToToday() {
+  selectedDate = new Date();
+  closeCalendar();
+  render();
+}
+
+function prevMonth() { calDate.setMonth(calDate.getMonth()-1); renderCal(); }
+function nextMonth() { calDate.setMonth(calDate.getMonth()+1); renderCal(); }
+
+function renderCal() {
+  const y = calDate.getFullYear(), m = calDate.getMonth();
+  document.getElementById('monthName').textContent =
+    calDate.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
+
+  const first = new Date(y,m,1);
+  const offset = (first.getDay()||7)-1;
+  const monday = new Date(first);
+  monday.setDate(1-offset);
+
+  let html='';
+  for(let week=0;week<6;week++){
+    for(let wd=0;wd<5;wd++){
+      const d = new Date(monday);
+      d.setDate(monday.getDate()+week*7+wd);
+      const ds = fmtDate(d);
+      const isThisMonth = d.getMonth()===m;
+      const isTodayCal = ds===fmtDate(new Date());
+      const isSel = ds===fmtDate(selectedDate);
+      const hasEntry = !!entries[ds];
+      html += `<div class="cal-day
+        ${!isThisMonth?'other-month':''}
+        ${isTodayCal?'is-today':''}
+        ${isSel?'is-selected':''}
+        ${hasEntry?'has-entry':''}"
+        onclick="pickDate(${d.getFullYear()},${d.getMonth()},${d.getDate()})">
+        ${d.getDate()}
+      </div>`;
+    }
+  }
+  document.getElementById('calGrid').innerHTML=html;
+}
+
+function pickDate(y,m,day) {
+  selectedDate = new Date(y,m,day);
+  closeCalendar();
+  render();
+}
+
+// ─── SHARE ───────────────────────────────────────────────
+function shareJanine() {
+  const ds = fmtDate(selectedDate);
+  const e = entries[ds]||{hours:0,status:'normal',notes:''};
+  const text = `Stundenzettel ${ds}\nStunden: ${e.hours}h\nStatus: ${e.status}\nBemerkung: ${e.notes||'–'}`;
+  if(navigator.share) navigator.share({title:'Stundenzettel',text});
+  else { navigator.clipboard.writeText(text); showToast('Kopiert ✓'); }
+}
+
+function shareNative() {
+  shareJanine();
+}
+</script>
 </body>
 </html>
