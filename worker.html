@@ -217,52 +217,61 @@ body {
 .modal.open { display:flex; }
 .modal-box {
   background:white; width:100%; border-radius:24px 24px 0 0;
-  padding:22px 20px 30px; max-height:85vh; overflow-y:auto;
+  padding:18px 16px 20px;
+  max-height:92vh;
+  display:flex; flex-direction:column;
 }
-.modal-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
-.modal-title { font-size:20px; font-weight:700; }
-.btn-close { background:#f0f0f0; border:none; width:34px; height:34px; border-radius:50%; font-size:18px; cursor:pointer; }
-.month-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
-.month-nav-btn { background:#f0f0f0; border:none; width:44px; height:44px; border-radius:50%; font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-.month-name { font-size:19px; font-weight:700; }
-.cal-headers { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:8px; }
-.cal-hd { text-align:center; font-size:12px; color:#aaa; font-weight:700; padding:6px 0; letter-spacing:1px; }
-.cal-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+.modal-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.modal-title { font-size:18px; font-weight:700; }
+.btn-close { background:#f0f0f0; border:none; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; }
+.month-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.month-nav-btn { background:#f0f0f0; border:none; width:40px; height:40px; border-radius:50%; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.month-name { font-size:17px; font-weight:700; }
+.cal-headers { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; margin-bottom:4px; padding:0 4px; }
+.cal-hd { text-align:center; font-size:11px; color:#bbb; font-weight:700; padding:4px 0; letter-spacing:1px; }
+.cal-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; padding:0 4px; flex:1; }
 .cal-day {
   aspect-ratio:1; display:flex; flex-direction:column;
   align-items:center; justify-content:center;
   border-radius:10px; cursor:pointer;
-  font-size:14px; font-weight:700;
-  min-height:44px; color:#333;
-  transition: transform 0.15s, box-shadow 0.15s;
-  background:#f8f8f8;
-  position:relative;
+  font-size:13px; font-weight:700;
+  color:#333; transition:transform 0.15s, box-shadow 0.15s;
+  background:#f8f8f8; position:relative;
 }
 .cal-day:active { transform:scale(0.93); }
-.cal-day:hover { transform:scale(1.05); box-shadow:0 6px 16px rgba(0,0,0,0.12); }
 .cal-day.other-month { opacity:0.2; pointer-events:none; }
 .cal-day.is-today {
   background:#3db356; color:white;
   box-shadow:0 4px 14px rgba(61,179,86,0.4);
 }
-.cal-day.is-selected {
-  box-shadow:0 0 0 3px #3db356, 0 4px 12px rgba(0,0,0,0.1);
-}
-/* Status-Farben */
-.cal-day.status-normal  { background:#e8f8ee; color:#1a6b35; }
-.cal-day.status-schule  { background:#ffe0e0; color:#b91c1c; }
-.cal-day.status-frei    { background:#fff3cd; color:#92600a; }
-.cal-day.status-krank   { background:#dbeafe; color:#1d4ed8; }
-.cal-day.is-today.status-normal  { background:#3db356; color:white; }
-.cal-day .cal-stunden {
-  font-size:10px; font-weight:600; opacity:0.75; margin-top:2px; line-height:1;
-}
+.cal-day.is-selected { box-shadow:0 0 0 3px #3db356; }
+.cal-day.status-normal { background:#e8f8ee; color:#1a6b35; }
+.cal-day.status-schule { background:#ffe0e0; color:#b91c1c; }
+.cal-day.status-frei   { background:#fff3cd; color:#92600a; }
+.cal-day.status-krank  { background:#dbeafe; color:#1d4ed8; }
+.cal-day.is-today.status-normal { background:#3db356; color:white; }
+.cal-day .cal-stunden { font-size:9px; font-weight:600; opacity:0.75; margin-top:1px; line-height:1; }
 .cal-day.is-today .cal-stunden { opacity:0.9; }
+
+/* Nächster Termin im Kalender */
+.cal-next-termin {
+  margin:10px 4px 0;
+  background:#f0faf4; border-radius:12px;
+  padding:9px 14px; border-left:3px solid #3db356;
+  display:none;
+}
+.cal-next-termin-inner { display:flex; justify-content:space-between; align-items:center; }
+.cal-next-label { font-size:9px; color:#aaa; letter-spacing:1px; text-transform:uppercase; margin-bottom:3px; }
+.cal-next-name { font-size:13px; font-weight:600; color:#1a6b35; }
+.cal-next-date { font-size:11px; color:#3db356; font-weight:600; }
+
+/* Zurück-Button als runder grüner Button */
 .btn-heute {
-  width:100%; margin-top:16px; padding:14px;
+  margin:10px 4px 0; padding:13px;
   background:#3db356; color:white; border:none;
-  border-radius:14px; font-size:16px; font-weight:700;
-  cursor:pointer; font-family:'Poppins',sans-serif;
+  border-radius:14px; font-size:15px; font-weight:700;
+  cursor:pointer; font-family:'Poppins',sans-serif; width:calc(100% - 8px);
+  flex-shrink:0;
 }
 </style>
 </head>
@@ -458,18 +467,17 @@ body {
       <div class="cal-hd">Fr</div>
     </div>
     <div class="cal-grid" id="calGrid"></div>
-    <button class="btn-heute" onclick="goToToday()">↩ Zurück zu Heute</button>
-    <!-- Nächster Termin kompakt -->
-    <div id="calNextTermin" style="
-      margin-top:12px; background:#f8f8f8; border-radius:12px;
-      padding:10px 14px; display:none;
-      border-left:3px solid #3db356;">
-      <div style="font-size:10px;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Nächster Termin</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div style="font-size:13px;font-weight:600;color:#333;" id="calNextName">–</div>
-        <div style="font-size:11px;color:#3db356;font-weight:600;" id="calNextDate">–</div>
+
+    <!-- Nächster Termin im Kalender -->
+    <div class="cal-next-termin" id="calNextTermin">
+      <div class="cal-next-label">Nächster Termin</div>
+      <div class="cal-next-termin-inner">
+        <div class="cal-next-name" id="calNextName">–</div>
+        <div class="cal-next-date" id="calNextDate">–</div>
       </div>
     </div>
+
+    <button class="btn-heute" onclick="goToToday()">↩ Zurück zu Heute</button>
   </div>
 </div>
 
