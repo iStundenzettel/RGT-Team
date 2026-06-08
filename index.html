@@ -142,10 +142,17 @@ body {
 </head>
 <body>
 
-<div class="header">
-  <div class="header-sub">STUNDENZETTEL</div>
-  <div class="header-title">RGT</div>
-  <div class="header-org">Arnold-Janssen-Schule</div>
+<div style="margin-bottom:16px;">
+  <div style="
+    background:rgba(0,0,0,0.25);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:20px;
+    padding:18px 16px 16px;
+    text-align:center; color:white;">
+    <div style="font-size:10px;letter-spacing:3px;opacity:0.6;margin-bottom:3px;">STUNDENZETTEL</div>
+    <div style="font-size:42px;font-weight:800;line-height:1.1;margin-bottom:2px;">RGT</div>
+    <div style="font-size:12px;letter-spacing:1.5px;opacity:0.6;">Arnold-Janssen-Schule · Goch</div>
+  </div>
 </div>
 
 <!-- BEKANNTE NUTZER -->
@@ -156,11 +163,27 @@ body {
   </div>
 </div>
 
-<!-- ANMELDUNG TOGGLE -->
-<button class="section-toggle" id="regToggle" onclick="toggleReg()">
-  <span>➕ Neue Person anmelden</span>
-  <span id="regArrow">▼</span>
-</button>
+<!-- BUTTONS NEBENEINANDER -->
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+  <button onclick="toggleReg()" style="
+    background:rgba(255,255,255,0.15); border:1.5px solid rgba(255,255,255,0.3);
+    color:white; padding:18px 10px; border-radius:16px;
+    font-size:14px; font-weight:700; cursor:pointer;
+    font-family:'Poppins',sans-serif; display:flex;
+    flex-direction:column; align-items:center; gap:6px;">
+    <span style="font-size:24px;">➕</span>
+    <span>Neuanmeldung</span>
+  </button>
+  <button onclick="toggleAdmin()" style="
+    background:rgba(255,255,255,0.1); border:1.5px solid rgba(255,255,255,0.2);
+    color:rgba(255,255,255,0.8); padding:18px 10px; border-radius:16px;
+    font-size:14px; font-weight:700; cursor:pointer;
+    font-family:'Poppins',sans-serif; display:flex;
+    flex-direction:column; align-items:center; gap:6px;">
+    <span style="font-size:24px;">⚙️</span>
+    <span>Admin</span>
+  </button>
+</div>
 
 <!-- ANMELDUNG FORMULAR -->
 <div class="card reg-section" id="regSection">
@@ -230,22 +253,16 @@ body {
   <button class="btn-secondary" onclick="toggleReg()">Abbrechen</button>
 </div>
 
-<!-- ADMIN TOGGLE -->
-<button class="section-toggle" id="adminToggle" onclick="toggleAdmin()" style="margin-top:8px;">
-  <span>⚙️ Administrator</span>
-  <span id="adminArrow">▼</span>
-</button>
-
 <!-- ADMIN BEREICH -->
 <div class="card admin-section" id="adminSection">
   <div class="card-title">⚙️ Administration</div>
 
   <div id="adminLocked" class="admin-locked">
-    <p style="color:#888; font-size:14px; margin-bottom:16px;">PIN eingeben</p>
+    <p style="color:#888; font-size:13px; margin-bottom:12px;">Admin-PIN eingeben</p>
     <div class="pin-row">
-      <input class="pin-input" id="pinInput" type="password" maxlength="4" placeholder="••••" oninput="checkPin()">
+      <input class="pin-input" id="pinInput" type="password" maxlength="10" placeholder="PIN" oninput="checkPin()"
+        style="width:140px; letter-spacing:4px;">
     </div>
-    <p style="color:#ccc; font-size:12px;">Standard-PIN: 1234</p>
   </div>
 
   <div id="adminContent" style="display:none;">
@@ -256,7 +273,7 @@ body {
 </div>
 
 <script>
-const ADMIN_PIN = '1234';
+const ADMIN_PIN = 'owa';
 
 // ─── DEFAULTS PRO ROLLE ───────────────────────────────────
 const ROLLE_DEFAULTS = {
@@ -470,16 +487,25 @@ function renderAdminList() {
     container.innerHTML = '<div class="empty-state">Keine Nutzer vorhanden.</div>';
     return;
   }
-  container.innerHTML = users.map(u => {
+  // Kompaktes 2-spaltiges Dashboard
+  const grid = users.map(u => {
     const dn = u.displayName || u.name.split('_').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ');
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #eee;">
-      <div>
-        <div style="font-weight:600;">${dn}</div>
-        <div style="font-size:12px;color:#aaa;">${u.wochenstunden} Std./Woche · ${Object.keys(u.eintraege||{}).length} Einträge</div>
-      </div>
-      <button class="btn-danger" onclick="deleteUser('${u.name}')">🗑 Löschen</button>
+    const saldo = calcSaldo(u);
+    const sign = saldo >= 0 ? '+' : '';
+    const sc = saldo > 0 ? '#27ae60' : saldo < 0 ? '#d9534f' : '#888';
+    const sb = saldo > 0 ? '#f0faf3' : saldo < 0 ? '#fff1f2' : '#f5f5f5';
+    const nameParts = dn.split(' ');
+    const shortName = nameParts.length > 1
+      ? nameParts[0] + ' ' + nameParts[nameParts.length-1][0] + '.'
+      : dn;
+    return `<div style="background:#fafafa;border:1px solid #eee;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;">
+      <div style="font-size:13px;font-weight:700;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${shortName}</div>
+      <div style="font-size:11px;color:#aaa;">${u.wochenstunden}h/W · ${Object.keys(u.eintraege||{}).length} Eintr.</div>
+      <div style="font-size:15px;font-weight:800;color:${sc};background:${sb};padding:3px 8px;border-radius:8px;text-align:center;">${sign}${saldo.toLocaleString('de-DE')}h</div>
+      <button onclick="deleteUser('${u.name}')" style="font-size:10px;color:#d9534f;background:none;border:none;cursor:pointer;padding:2px 0;">🗑 löschen</button>
     </div>`;
   }).join('');
+  container.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">${grid}</div>`;
 }
 
 function deleteUser(name) {
