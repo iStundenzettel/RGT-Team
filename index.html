@@ -319,7 +319,7 @@ function calcSaldo(user) {
     const map = {Montag:1,Dienstag:2,Mittwoch:3,Donnerstag:4,Freitag:5};
     plan[map[s.day]] = s.soll || 0;
   });
-  let saldo = 0;
+  let saldo = parseFloat(user.startsaldo) || 0; // ← Startsaldo als Basis
   Object.entries(entries).forEach(([ds,e]) => {
     const d = new Date(ds+'T12:00:00');
     const soll = plan[d.getDay()] || 0;
