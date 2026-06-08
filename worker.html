@@ -45,7 +45,7 @@ body {
 
 /* CARD */
 .card {
-  background:white; margin:10px 14px 0;
+  background:white; margin:7px 14px 0;
   border-radius:22px; padding:16px 18px;
   box-shadow:0 6px 24px rgba(0,0,0,0.13);
 }
@@ -143,7 +143,7 @@ body {
 /* NÄCHSTER TERMIN */
 .next-card {
   background:rgba(10,40,18,0.75);
-  margin:10px 14px 0;
+  margin:7px 14px 0;
   border-radius:14px; color:white; overflow:hidden;
 }
 .next-row {
@@ -225,14 +225,14 @@ body {
 .modal.open { display:flex; }
 .modal-box {
   background:white; width:100%; border-radius:24px 24px 0 0;
-  padding:18px 16px 20px;
-  max-height:92vh;
+  padding:14px 14px 16px;
+  max-height:94vh;
   display:flex; flex-direction:column;
 }
 .modal-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
 .modal-title { font-size:20px; font-weight:800; color:#3db356; text-align:center; flex:1; }
 .btn-close { background:#f0f0f0; border:none; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; }
-.month-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.month-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
 .month-nav-btn { background:#f0f0f0; border:none; width:40px; height:40px; border-radius:50%; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
 .month-name { font-size:17px; font-weight:700; }
 .cal-headers { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; margin-bottom:4px; padding:0 4px; }
@@ -241,9 +241,9 @@ body {
 .cal-day {
   aspect-ratio:1; display:flex; flex-direction:column;
   align-items:center; justify-content:center;
-  border-radius:10px; cursor:pointer;
-  font-size:13px; font-weight:700;
-  color:#333; transition:transform 0.15s, box-shadow 0.15s;
+  border-radius:8px; cursor:pointer;
+  font-size:12px; font-weight:700;
+  color:#333; transition:transform 0.15s;
   background:#f8f8f8; position:relative;
 }
 .cal-day:active { transform:scale(0.93); }
@@ -262,25 +262,21 @@ body {
 .cal-day.is-today .cal-stunden { opacity:0.9; }
 
 /* Nächster Termin im Kalender */
-.cal-next-termin {
-  margin:10px 4px 0;
-  background:#f0faf4; border-radius:12px;
-  padding:9px 14px; border-left:3px solid #3db356;
-  display:none;
-}
+.cal-next-termin { display:none !important; }
 .cal-next-termin-inner { display:flex; justify-content:space-between; align-items:center; }
 .cal-next-label { font-size:9px; color:#aaa; letter-spacing:1px; text-transform:uppercase; margin-bottom:3px; }
 .cal-next-name { font-size:13px; font-weight:600; color:#1a6b35; }
 .cal-next-date { font-size:11px; color:#3db356; font-weight:600; }
 
 .btn-heute {
-  margin:10px 4px 0; padding:12px 18px;
-  background:#3db356; color:white; border:none;
+  margin:10px 4px 0; padding:11px 18px;
+  background:transparent;
+  color:#3db356; 
+  border:2px solid #3db356;
   border-radius:50px; font-size:14px; font-weight:700;
   cursor:pointer; font-family:'Poppins',sans-serif;
   display:flex; align-items:center; justify-content:center;
   gap:8px; width:calc(100% - 8px); flex-shrink:0;
-  box-shadow:0 4px 12px rgba(61,179,86,0.35);
 }
 </style>
 </head>
@@ -478,7 +474,7 @@ body {
   <div class="modal-box">
     <div class="modal-top">
       <div style="width:32px;"></div>
-      <div class="modal-title">Kalender</div>
+      <div class="modal-title" style="color:#4f9ff0;">Kalender</div>
       <button class="btn-close" onclick="closeCalendar()">✕</button>
     </div>
     <div class="month-nav">
@@ -495,16 +491,21 @@ body {
     </div>
     <div class="cal-grid" id="calGrid"></div>
 
-    <!-- Nächster Termin im Kalender -->
-    <div class="cal-next-termin" id="calNextTermin">
-      <div class="cal-next-label">Nächster Termin</div>
-      <div class="cal-next-termin-inner">
-        <div class="cal-next-name" id="calNextName">–</div>
-        <div class="cal-next-date" id="calNextDate">–</div>
-      </div>
+    <div style="display:flex;gap:8px;margin:8px 4px 0;">
+      <button onclick="closeCalendar()" style="
+        flex:1;padding:11px;background:transparent;
+        color:#aaa;border:1.5px solid #e0e0e0;border-radius:12px;
+        font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">
+        ✕ Schließen
+      </button>
+      <button onclick="goToToday()" style="
+        flex:2;padding:11px;background:#3db356;
+        color:white;border:none;border-radius:12px;
+        font-size:13px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;
+        box-shadow:0 3px 10px rgba(61,179,86,0.3);">
+        ↩ Zurück zu Heute
+      </button>
     </div>
-
-    <button class="btn-heute" onclick="goToToday()"><span style="font-size:18px;">📅</span> Zurück zu Heute</button>
   </div>
 </div>
 
@@ -1144,15 +1145,7 @@ function openCalendar() {
   calDate = new Date(selectedDate);
   renderCal();
   document.getElementById('calModal').classList.add('open');
-  // Nächster Termin im Modal anzeigen
-  const nd = document.getElementById('nextDate');
-  const nn = document.getElementById('nextName');
-  if (nd && nd.textContent !== '–') {
-    document.getElementById('calNextName').textContent =
-      (document.getElementById('nextIcon')?.textContent || '') + ' ' + nn.textContent;
-    document.getElementById('calNextDate').textContent = nd.textContent;
-    document.getElementById('calNextTermin').style.display = 'block';
-  }
+
 }
 
 function closeCalendar() {
