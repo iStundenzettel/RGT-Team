@@ -415,7 +415,12 @@ function buildPlan() {
   PLAN = {};
   (userData.schedule||[]).forEach(s => {
     const d = map[s.day];
-    if (d) PLAN[d] = { von:s.von||'08:00', bis:s.bis||'15:00', soll:parseFloat(s.soll)||0 };
+    if (d) PLAN[d] = {
+      von: s.von||'08:00',
+      bis: s.bis||'15:00',
+      soll: parseFloat(s.soll)||0,
+      teamtag: s.teamtag || false
+    };
   });
 }
 
@@ -459,6 +464,14 @@ function render() {
     todayVal = -soll; // Anzeige: −4,2
   } else {
     todayVal = entry.hours; // Normal, Krank, Frei: positiver Wert
+  }
+
+  // Teamtag: Button anzeigen/verstecken je nach Plan
+  const teamBtn = document.getElementById('btn-team');
+  if (plan && plan.teamtag) {
+    teamBtn.style.display = 'block';
+  } else {
+    teamBtn.style.display = 'none';
   }
 
   updateDisplay(soll);
