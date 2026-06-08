@@ -196,6 +196,13 @@ body {
     <div class="badge" id="weekHours" onclick="openOverview()" style="cursor:pointer;">31 Std. / Woche</div>
     <div class="badge" id="saldoBadge">Saldo: +0h</div>
   </div>
+  <button onclick="openSettings()" style="
+    margin-top:12px; background:rgba(255,255,255,0.15);
+    border:1px solid rgba(255,255,255,0.3); color:white;
+    padding:8px 18px; border-radius:20px; font-size:13px;
+    font-weight:600; cursor:pointer; font-family:'Poppins',sans-serif;">
+    ⚙️ Einstellungen
+  </button>
 </div>
 
 <div class="card" id="mainCard">
@@ -256,6 +263,53 @@ body {
 </div>
 
 <div class="toast" id="toast">Gespeichert ✓</div>
+
+<!-- EINSTELLUNGEN MODAL -->
+<div class="modal" id="settingsModal">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div class="modal-title">⚙️ Einstellungen</div>
+      <button class="btn-close" onclick="closeSettings()">✕</button>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Startsaldo / Übertrag</div>
+      <div style="font-size:13px;color:#888;margin-bottom:10px;">Stunden aus vorherigen Monaten. Minus = du schuldest noch Stunden.</div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input type="number" id="settingsSaldo" step="0.1" placeholder="z.B. -5 oder +3"
+          style="flex:1;padding:13px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;font-family:'Poppins',sans-serif;">
+        <span style="color:#aaa;font-size:13px;">Std.</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Wochenstunden</div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input type="number" id="settingsWochen" step="0.5" min="1" max="50"
+          style="flex:1;padding:13px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;font-family:'Poppins',sans-serif;">
+        <span style="color:#aaa;font-size:13px;">Std. / Woche</span>
+      </div>
+    </div>
+
+    <button class="btn-heute" onclick="saveSettings()" style="margin-bottom:10px;">✓ Speichern</button>
+
+    <div style="border-top:1px solid #eee;margin:16px 0;"></div>
+
+    <button onclick="goHome()" style="
+      width:100%;padding:13px;background:#f5f5f5;color:#666;
+      border:none;border-radius:12px;font-size:14px;font-weight:600;
+      cursor:pointer;font-family:'Poppins',sans-serif;margin-bottom:10px;">
+      🏠 Zurück zur Startseite
+    </button>
+
+    <button onclick="confirmDeleteData()" style="
+      width:100%;padding:13px;background:#fff0f0;color:#d9534f;
+      border:1.5px solid #f5c0c0;border-radius:12px;font-size:14px;
+      font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">
+      🗑 Alle meine Einträge löschen
+    </button>
+  </div>
+</div>
 
 <!-- ÜBERSICHT MODAL -->
 <div class="modal" id="overviewModal">
@@ -502,15 +556,12 @@ function addHours(delta) {
 
 // ─── SALDO ───────────────────────────────────────────────
 function updateSaldo() {
-  let saldo = 0;
+  let saldo = userData.startsaldo || 0; // Startsaldo als Basis
   Object.entries(entries).forEach(([ds, entry]) => {
     const d = new Date(ds+'T12:00:00');
-    const dow = d.getDay();
-    const plan = PLAN[dow];
+    const plan = PLAN[d.getDay()];
     if (!plan) return;
-    const soll = plan.soll;
-    // Differenz: was gearbeitet minus was geplant
-    saldo += (entry.hours||0) - soll;
+    saldo += (entry.hours||0) - plan.soll;
   });
   saldo = Math.round(saldo*100)/100;
   const sign = saldo >= 0 ? '+' : '';
@@ -540,6 +591,45 @@ function showToast(msg) {
   setTimeout(()=>t.classList.remove('show'), 2000);
 }
 
+// ─── EINSTELLUNGEN ───────────────────────────────────────
+function openSettings() {
+  document.getElementById('settingsSaldo').value = userData.startsaldo || 0;
+  document.getElementById('settingsWochen').value = userData.wochenstunden || 31;
+  document.getElementById('settingsModal').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('open');
+}
+
+function saveSettings() {
+  const saldo = parseFloat(document.getElementById('settingsSaldo').value) || 0;
+  const wochen = parseFloat(document.getElementById('settingsWochen').value) || userData.wochenstunden;
+  userData.startsaldo = saldo;
+  userData.wochenstunden = wochen;
+  doSave();
+  document.getElementById('weekHours').textContent =
+    wochen.toLocaleString('de-DE') + ' Std. / Woche';
+  closeSettings();
+  showToast('Einstellungen gespeichert ✓');
+  updateSaldo();
+}
+
+function goHome() {
+  location.href = 'index.html';
+}
+
+function confirmDeleteData() {
+  if (confirm('Wirklich alle Einträge löschen? Der Name und die Einstellungen bleiben erhalten.')) {
+    userData.eintraege = {};
+    entries = {};
+    doSave();
+    closeSettings();
+    render();
+    showToast('Einträge gelöscht ✓');
+  }
+}
+
 // ─── ÜBERSICHT ───────────────────────────────────────────
 function openOverview() {
   const TAGE = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
@@ -558,8 +648,12 @@ function openOverview() {
 
   // ─ EINTRÄGE-TABELLE ─
   const allEntries = Object.entries(entries).sort((a,b)=>a[0].localeCompare(b[0]));
-  let totalSaldo = 0;
+  let totalSaldo = userData.startsaldo || 0;
   let eintraegeHTML = '';
+  const startsaldoHint = totalSaldo !== 0
+    ? `<div style="background:#f5f9ff;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:#4f9ff0;font-weight:600;">
+        📌 Startsaldo / Übertrag: ${totalSaldo > 0 ? '+' : ''}${totalSaldo.toLocaleString('de-DE')}h
+       </div>` : '';
 
   if (allEntries.length) {
     const rows = allEntries.map(([ds, e]) => {
@@ -625,7 +719,8 @@ function openOverview() {
       </thead>
       <tbody>${planRows}</tbody>
     </table>
-    ${eintraegeHTML}`;
+    ${eintraegeHTML}
+    ${startsaldoHint}`;
 
   document.getElementById('overviewModal').classList.add('open');
 }
