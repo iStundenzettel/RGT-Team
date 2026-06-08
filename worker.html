@@ -49,7 +49,7 @@ body {
   background:white; margin:10px 14px 0;
   border-radius:22px; padding:16px 18px;
   box-shadow:0 6px 24px rgba(0,0,0,0.13);
-  flex:1; display:flex; flex-direction:column;
+  flex:1;
 }
 
 /* HEUTE BADGE + DATE */
@@ -126,12 +126,12 @@ body {
   cursor:pointer; color:#4f9ff0; font-family:'Poppins',sans-serif;
   transition:all 0.15s;
 }
-.btn-verlaeng.selected { border-color:#4f9ff0; background:#f0f7ff; }
-  border-color:#4f9ff0; background:#f0f7ff; color:#4f9ff0;
-}
+.btn-verlaeng.selected { border-color:#4f9ff0; background:#f0f7ff; color:#4f9ff0; }
 .btn-team .teamLabel { font-size:12px; opacity:0.7; margin-left:4px; }
-.btn-status.active { border-color:#3db356; background:#f0faf3; color:#27ae60; }
-.btn-status.active.rot { border-color:#d9534f; background:#fff0f0; color:#d9534f; }
+.btn-status.active         { border-color:#3db356; background:#f0faf3; color:#27ae60; }
+.btn-status.active-frei    { border-color:#f59e0b; background:#fffbeb; color:#d97706; }
+.btn-status.active-krank   { border-color:#60a5fa; background:#eff6ff; color:#3b82f6; }
+.btn-status.active-schule  { border-color:#ef4444; background:#fff1f2; color:#dc2626; }
 
 /* NOTES */
 .notes-label { font-size:12px; color:#bbb; font-weight:600; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
@@ -145,8 +145,8 @@ body {
 /* NÄCHSTER TERMIN */
 .next-card {
   background:rgba(10,40,18,0.75);
-  margin:14px 14px 0; border-radius:14px;
-  color:white; overflow:hidden;
+  margin:10px 14px 0;
+  border-radius:14px; color:white; overflow:hidden;
 }
 .next-row {
   display:flex; align-items:center; gap:8px;
@@ -255,11 +255,11 @@ body {
   box-shadow:0 4px 14px rgba(61,179,86,0.4);
 }
 .cal-day.is-selected { box-shadow:0 0 0 3px #3db356; }
-.cal-day.status-normal { background:#e8f8ee; color:#1a6b35; }
-.cal-day.status-schule { background:#ffe0e0; color:#b91c1c; }
-.cal-day.status-frei   { background:#fff3cd; color:#92600a; }
-.cal-day.status-krank  { background:#dbeafe; color:#1d4ed8; }
-.cal-day.is-today.status-normal { background:#3db356; color:white; }
+.cal-day.status-normal { background:#d1fae5; color:#065f46; border:2px solid #6ee7b7; }
+.cal-day.status-schule { background:#fee2e2; color:#991b1b; border:2px solid #fca5a5; }
+.cal-day.status-frei   { background:#fef3c7; color:#92400e; border:2px solid #fcd34d; }
+.cal-day.status-krank  { background:#dbeafe; color:#1e40af; border:2px solid #93c5fd; }
+.cal-day.is-today.status-normal { background:#3db356; color:white; border:2px solid #27ae60; }
 .cal-day .cal-stunden { font-size:9px; font-weight:600; opacity:0.75; margin-top:1px; line-height:1; }
 .cal-day.is-today .cal-stunden { opacity:0.9; }
 
@@ -371,14 +371,14 @@ body {
 </div>
 
 <!-- NÄCHSTER TERMIN EINZEILER -->
-<div class="next-card" id="nextCard" onclick="this.classList.toggle('open')">
-  <div class="next-row">
-    <span class="next-date-txt" id="nextDate">–</span>
+<div class="next-card" id="nextCard">
+  <div class="next-row" onclick="document.getElementById('nextCard').classList.toggle('open')">
+    <span class="next-date-txt" id="nextDate" style="color:rgba(255,255,255,0.4);">–</span>
     <div class="next-divider"></div>
     <span class="next-icon-txt" id="nextIcon">📅</span>
-    <span class="next-name-txt" id="nextName">Kein Termin</span>
-    <span class="next-badge" id="nextCountdown"></span>
-    <button class="next-add-btn" onclick="event.stopPropagation(); addTermin()">+</button>
+    <span class="next-name-txt" id="nextName" style="color:rgba(255,255,255,0.5);">Kein Termin</span>
+    <span class="next-badge" id="nextCountdown" style="display:none;"></span>
+    <button class="next-add-btn" onclick="event.stopPropagation(); addTermin()" style="color:#86efac; font-size:22px;">+</button>
   </div>
   <div class="next-drawer">
     <div class="next-drawer-inner">
@@ -744,12 +744,17 @@ function updateTeamBtn(isTeam) {
 }
 
 function updateStatusBtns(status) {
+  const configs = {
+    normal: 'active',
+    frei:   'active-frei',
+    krank:  'active-krank',
+    schule: 'active-schule'
+  };
   ['normal','frei','krank','schule'].forEach(s => {
     const b = document.getElementById('btn-'+s);
     if (!b) return;
-    b.classList.toggle('active', status === s);
-    if (status === s && s === 'schule') b.classList.add('rot');
-    else b.classList.remove('rot');
+    b.classList.remove('active','active-frei','active-krank','active-schule');
+    if (status === s) b.classList.add(configs[s]);
   });
 }
 
