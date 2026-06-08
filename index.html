@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Stundenzettel – Start</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family:'Poppins',sans-serif;
+  background: linear-gradient(160deg,#0d2b14 0%,#2a7a3b 60%,#3db356 100%);
+  min-height:100vh; padding:30px 16px 40px;
+}
+
+/* HEADER */
+.header { text-align:center; color:white; margin-bottom:28px; }
+.header-sub { font-size:12px; letter-spacing:3px; opacity:0.75; margin-bottom:6px; }
+.header-title { font-size:36px; font-weight:800; margin-bottom:4px; }
+.header-org { font-size:12px; letter-spacing:2px; opacity:0.7; }
+
+/* CARD */
+.card {
+  background:white; border-radius:20px;
+  padding:22px; margin-bottom:16px;
+  box-shadow:0 6px 24px rgba(0,0,0,0.13);
+}
+.card-title {
+  font-size:13px; font-weight:700; letter-spacing:1.5px;
+  color:#3db356; text-transform:uppercase; margin-bottom:16px;
+  display:flex; align-items:center; gap:8px;
+}
+
+/* USER LIST */
+.user-list { display:flex; flex-direction:column; gap:10px; }
+.user-item {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:14px 16px; border-radius:14px;
+  background:#f5faf6; border:1.5px solid #e0f0e5;
+  cursor:pointer; transition:all 0.15s;
+}
+.user-item:active { transform:scale(0.98); background:#e0f5e8; }
+.user-name { font-size:16px; font-weight:700; color:#222; }
+.user-meta { font-size:12px; color:#888; margin-top:2px; }
+.user-arrow { font-size:20px; color:#3db356; }
+.user-saldo { font-size:13px; font-weight:600; padding:4px 10px; border-radius:10px; }
+.user-saldo.pos { background:#e8f8ee; color:#27ae60; }
+.user-saldo.neg { background:#fff0f0; color:#d9534f; }
+.user-saldo.zero { background:#f0f0f0; color:#888; }
+
+/* ANMELDUNG / REGISTRIERUNG */
+.reg-section { display:none; }
+.reg-section.visible { display:block; }
+
+.form-group { margin-bottom:16px; }
+.form-label { font-size:12px; font-weight:600; color:#4f9ff0; margin-bottom:6px; display:block; text-transform:uppercase; letter-spacing:0.5px; }
+.form-input {
+  width:100%; padding:13px 14px;
+  border:1.5px solid #e8eef5; border-radius:12px;
+  font-family:'Poppins',sans-serif; font-size:15px; color:#333;
+}
+.form-input:focus { outline:none; border-color:#4f9ff0; }
+
+/* ROLLE BUTTONS */
+.rolle-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.rolle-btn {
+  padding:14px 10px; border:2px solid #e0e0e0; background:white;
+  border-radius:14px; font-size:13px; font-weight:600;
+  cursor:pointer; transition:all 0.15s; color:#555; text-align:center;
+}
+.rolle-btn.selected { border-color:#3db356; background:#f0faf3; color:#27ae60; }
+.rolle-btn .rolle-stunden { font-size:11px; font-weight:500; color:#aaa; margin-top:3px; }
+.rolle-btn.selected .rolle-stunden { color:#3db356; }
+
+/* ZUSATZ */
+.zusatz-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:10px; }
+.zusatz-btn {
+  padding:10px; border:2px solid #e0e0e0; background:white;
+  border-radius:12px; font-size:13px; font-weight:600;
+  cursor:pointer; color:#555;
+}
+.zusatz-btn.selected { border-color:#4f9ff0; background:#f0f7ff; color:#4f9ff0; }
+
+/* TAGESZEITEN */
+.tage-table { width:100%; border-collapse:collapse; margin-top:8px; }
+.tage-table th { font-size:11px; color:#aaa; font-weight:600; padding:6px 4px; text-align:left; }
+.tage-table td { padding:6px 4px; }
+.tage-table input[type=time] {
+  width:100%; padding:8px; border:1.5px solid #e8eef5;
+  border-radius:8px; font-family:'Poppins',sans-serif; font-size:13px;
+}
+.tage-table input[type=number] {
+  width:100%; padding:8px; border:1.5px solid #e8eef5;
+  border-radius:8px; font-family:'Poppins',sans-serif; font-size:13px; text-align:center;
+}
+.tage-label { font-size:13px; font-weight:600; color:#444; }
+
+/* BUTTONS */
+.btn-primary {
+  width:100%; padding:16px; background:linear-gradient(to right,#3db356,#27ae60);
+  color:white; border:none; border-radius:14px;
+  font-size:16px; font-weight:700; cursor:pointer;
+  font-family:'Poppins',sans-serif; margin-top:8px;
+}
+.btn-secondary {
+  width:100%; padding:13px; background:#f5f5f5;
+  color:#666; border:none; border-radius:14px;
+  font-size:14px; font-weight:600; cursor:pointer;
+  font-family:'Poppins',sans-serif; margin-top:8px;
+}
+.btn-danger {
+  padding:8px 14px; background:#fff0f0;
+  color:#d9534f; border:1.5px solid #f5c0c0; border-radius:10px;
+  font-size:12px; font-weight:600; cursor:pointer;
+}
+
+/* ADMIN BEREICH */
+.admin-section { display:none; }
+.admin-section.visible { display:block; }
+.admin-locked { text-align:center; padding:16px 0; }
+.pin-input {
+  width:120px; padding:12px; text-align:center;
+  border:2px solid #e8eef5; border-radius:12px;
+  font-size:24px; font-weight:700; letter-spacing:8px;
+  font-family:'Poppins',sans-serif;
+}
+.pin-row { display:flex; gap:10px; justify-content:center; align-items:center; margin:12px 0; }
+
+/* TOGGLE BTN */
+.section-toggle {
+  width:100%; padding:14px;
+  background:rgba(255,255,255,0.15);
+  color:white; border:2px solid rgba(255,255,255,0.3);
+  border-radius:14px; font-size:15px; font-weight:600;
+  cursor:pointer; font-family:'Poppins',sans-serif;
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:10px;
+}
+
+.empty-state { text-align:center; color:#bbb; padding:20px; font-size:14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-sub">STUNDENZETTEL</div>
+  <div class="header-title">RGT</div>
+  <div class="header-org">Arnold-Janssen-Schule</div>
+</div>
+
+<!-- BEKANNTE NUTZER -->
+<div class="card" id="userCard">
+  <div class="card-title">👤 Zum Stundenzettel</div>
+  <div class="user-list" id="userList">
+    <div class="empty-state">Noch keine Nutzer registriert.</div>
+  </div>
+</div>
+
+<!-- ANMELDUNG TOGGLE -->
+<button class="section-toggle" id="regToggle" onclick="toggleReg()">
+  <span>➕ Neue Person anmelden</span>
+  <span id="regArrow">▼</span>
+</button>
+
+<!-- ANMELDUNG FORMULAR -->
+<div class="card reg-section" id="regSection">
+  <div class="card-title">📝 Registrierung</div>
+
+  <div class="form-group">
+    <label class="form-label">Vorname & Nachname</label>
+    <input class="form-input" id="regName" type="text" placeholder="z.B. Marc Hoss">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Rolle / Gruppe</label>
+    <div class="rolle-grid" id="rolleGrid">
+      <button class="rolle-btn" onclick="selectRolle('erzieher')" id="rolle-erzieher">
+        🧑‍🏫 Erzieher
+        <div class="rolle-stunden">31 Std. / Woche</div>
+      </button>
+      <button class="rolle-btn" onclick="selectRolle('ergaenzung')" id="rolle-ergaenzung">
+        🤝 Ergänzungskraft
+        <div class="rolle-stunden">15 Std. / Woche</div>
+      </button>
+      <button class="rolle-btn" onclick="selectRolle('teamleitung')" id="rolle-teamleitung">
+        🏆 Teamleitung
+        <div class="rolle-stunden">31 + Zusatz Std.</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Zusatzstunden (nur für Chef/Ko-Chef) -->
+  <div class="form-group" id="zusatzGroup" style="display:none;">
+    <label class="form-label">Zusatzstunden</label>
+    <div class="zusatz-grid">
+      <button class="zusatz-btn" onclick="selectZusatz(0)" id="zusatz-0">keine</button>
+      <button class="zusatz-btn" onclick="selectZusatz(2)" id="zusatz-2">+2 Std.</button>
+      <button class="zusatz-btn" onclick="selectZusatz(5)" id="zusatz-5">+5 Std.</button>
+    </div>
+  </div>
+
+  <!-- Arbeitszeiten -->
+  <div class="form-group" id="zeitenGroup" style="display:none;">
+    <label class="form-label">Arbeitszeiten</label>
+    <table class="tage-table">
+      <thead>
+        <tr>
+          <th>Tag</th>
+          <th>Von</th>
+          <th>Bis</th>
+          <th>Std.</th>
+        </tr>
+      </thead>
+      <tbody id="zeitenBody"></tbody>
+    </table>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Startsaldo (optional)</label>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <input class="form-input" id="regSaldo" type="number" step="0.1" placeholder="z.B. −5 oder +3" style="flex:1;">
+      <span style="font-size:13px;color:#aaa;white-space:nowrap;">Stunden</span>
+    </div>
+    <div style="font-size:12px;color:#aaa;margin-top:6px;">Übertrag aus vorherigen Monaten. Minus = du schuldest noch Stunden.</div>
+  </div>
+
+  <button class="btn-primary" onclick="doRegister()">✓ Registrieren & Starten</button>
+  <button class="btn-secondary" onclick="toggleReg()">Abbrechen</button>
+</div>
+
+<!-- ADMIN TOGGLE -->
+<button class="section-toggle" id="adminToggle" onclick="toggleAdmin()" style="margin-top:8px;">
+  <span>⚙️ Administrator</span>
+  <span id="adminArrow">▼</span>
+</button>
+
+<!-- ADMIN BEREICH -->
+<div class="card admin-section" id="adminSection">
+  <div class="card-title">⚙️ Administration</div>
+
+  <div id="adminLocked" class="admin-locked">
+    <p style="color:#888; font-size:14px; margin-bottom:16px;">PIN eingeben</p>
+    <div class="pin-row">
+      <input class="pin-input" id="pinInput" type="password" maxlength="4" placeholder="••••" oninput="checkPin()">
+    </div>
+    <p style="color:#ccc; font-size:12px;">Standard-PIN: 1234</p>
+  </div>
+
+  <div id="adminContent" style="display:none;">
+    <p style="font-size:13px; color:#888; margin-bottom:16px;">Alle registrierten Personen:</p>
+    <div id="adminUserList"></div>
+    <button class="btn-secondary" onclick="lockAdmin()" style="margin-top:16px;">🔒 Sperren</button>
+  </div>
+</div>
+
+<script>
+const ADMIN_PIN = '1234';
+
+// ─── DEFAULTS PRO ROLLE ───────────────────────────────────
+const ROLLE_DEFAULTS = {
+  erzieher: {
+    label: 'Erzieher',
+    wochenstunden: 31,
+    schedule: [
+      { day:'Montag',    von:'07:30', bis:'15:00', soll:7.0 },
+      { day:'Dienstag',  von:'10:00', bis:'14:20', soll:4.2 },
+      { day:'Mittwoch',  von:'08:00', bis:'13:30', soll:5.1 },
+      { day:'Donnerstag',von:'08:00', bis:'17:15', soll:8.3 },
+      { day:'Freitag',   von:'10:00', bis:'15:00', soll:5.0 },
+    ]
+  },
+  ergaenzung: {
+    label: 'Ergänzungskraft',
+    wochenstunden: 15,
+    schedule: [
+      { day:'Montag',    von:'08:00', bis:'11:00', soll:3.0 },
+      { day:'Dienstag',  von:'08:00', bis:'11:00', soll:3.0 },
+      { day:'Mittwoch',  von:'08:00', bis:'11:00', soll:3.0 },
+      { day:'Donnerstag',von:'08:00', bis:'11:00', soll:3.0 },
+      { day:'Freitag',   von:'08:00', bis:'11:00', soll:3.0 },
+    ]
+  },
+  teamleitung: {
+    label: 'Teamleitung',
+    wochenstunden: 31,
+    schedule: [
+      { day:'Montag',    von:'07:30', bis:'15:00', soll:7.0 },
+      { day:'Dienstag',  von:'10:00', bis:'14:20', soll:4.2 },
+      { day:'Mittwoch',  von:'08:00', bis:'13:30', soll:5.1 },
+      { day:'Donnerstag',von:'08:00', bis:'17:15', soll:8.3 },
+      { day:'Freitag',   von:'10:00', bis:'15:00', soll:5.0 },
+    ]
+  }
+};
+
+const TAGE = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
+let selectedRolle = null;
+let selectedZusatz = 0;
+
+// ─── INIT ────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  renderUserList();
+});
+
+// ─── USER LIST ───────────────────────────────────────────
+function getAllUsers() {
+  return Object.keys(localStorage)
+    .filter(k => k.startsWith('stundenzettel_'))
+    .map(k => JSON.parse(localStorage.getItem(k)))
+    .filter(Boolean);
+}
+
+function calcSaldo(user) {
+  const entries = user.eintraege || {};
+  const plan = {};
+  (user.schedule||[]).forEach(s => {
+    const map = {Montag:1,Dienstag:2,Mittwoch:3,Donnerstag:4,Freitag:5};
+    plan[map[s.day]] = s.soll || 0;
+  });
+  let saldo = 0;
+  Object.entries(entries).forEach(([ds,e]) => {
+    const d = new Date(ds+'T12:00:00');
+    const soll = plan[d.getDay()] || 0;
+    saldo += (e.hours||0) - soll;
+  });
+  return Math.round(saldo*100)/100;
+}
+
+function renderUserList() {
+  const users = getAllUsers();
+  const list = document.getElementById('userList');
+  if (!users.length) {
+    list.innerHTML = '<div class="empty-state">Noch keine Person registriert.<br>Bitte unten anmelden.</div>';
+    return;
+  }
+  list.innerHTML = users.map(u => {
+    const saldo = calcSaldo(u);
+    const sign = saldo > 0 ? '+' : '';
+    const cls = saldo > 0 ? 'pos' : saldo < 0 ? 'neg' : 'zero';
+    const dn = u.name.split('_').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ');
+    const rolle = u.rolle ? ROLLE_DEFAULTS[u.rolle]?.label || '' : '';
+    return `<div class="user-item" onclick="goToUser('${u.name}')">
+      <div>
+        <div class="user-name">${dn}</div>
+        <div class="user-meta">${rolle} · ${u.wochenstunden} Std./Woche</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="user-saldo ${cls}">${sign}${saldo.toLocaleString('de-DE')}h</div>
+        <div class="user-arrow">›</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function goToUser(name) {
+  localStorage.setItem('last_stundenzettel_user', name);
+  location.href = 'worker.html';
+}
+
+// ─── REG TOGGLE ──────────────────────────────────────────
+function toggleReg() {
+  const sec = document.getElementById('regSection');
+  const arrow = document.getElementById('regArrow');
+  const open = sec.classList.toggle('visible');
+  arrow.textContent = open ? '▲' : '▼';
+}
+
+// ─── ROLLE ───────────────────────────────────────────────
+function selectRolle(rolle) {
+  selectedRolle = rolle;
+  document.querySelectorAll('.rolle-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('rolle-'+rolle).classList.add('selected');
+
+  const isChef = rolle === 'teamleitung';
+  document.getElementById('zusatzGroup').style.display = isChef ? 'block' : 'none';
+  document.getElementById('zeitenGroup').style.display = 'block';
+
+  // Zeiten-Tabelle füllen
+  const def = ROLLE_DEFAULTS[rolle];
+  const tbody = document.getElementById('zeitenBody');
+  tbody.innerHTML = def.schedule.map((s,i) => `
+    <tr>
+      <td class="tage-label">${s.day.substring(0,2)}</td>
+      <td><input type="time" id="t${i}von" value="${s.von}"></td>
+      <td><input type="time" id="t${i}bis" value="${s.bis}"></td>
+      <td><input type="number" id="t${i}soll" value="${s.soll}" step="0.1" min="0" max="12"></td>
+    </tr>
+  `).join('');
+}
+
+function selectZusatz(h) {
+  selectedZusatz = h;
+  document.querySelectorAll('.zusatz-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('zusatz-'+h).classList.add('selected');
+}
+
+// ─── REGISTRIEREN ────────────────────────────────────────
+function doRegister() {
+  const nameRaw = document.getElementById('regName').value.trim();
+  if (!nameRaw) { alert('Bitte Namen eingeben.'); return; }
+  if (!selectedRolle) { alert('Bitte Rolle wählen.'); return; }
+
+  const nameKey = nameRaw.toLowerCase().replace(/\s+/g,'_');
+  const def = ROLLE_DEFAULTS[selectedRolle];
+
+  const schedule = def.schedule.map((s,i) => ({
+    day: s.day,
+    von: document.getElementById('t'+i+'von')?.value || s.von,
+    bis: document.getElementById('t'+i+'bis')?.value || s.bis,
+    soll: parseFloat(document.getElementById('t'+i+'soll')?.value) || s.soll,
+  }));
+
+  const totalSoll = schedule.reduce((sum,s)=>sum+s.soll, 0);
+  const FESTE_STUNDEN = { erzieher: 31, teamleitung: 31, ergaenzung: 15 };
+  const basis = FESTE_STUNDEN[selectedRolle] || Math.round(totalSoll * 10) / 10;
+  const wochenstunden = basis + selectedZusatz;
+
+  const startsaldo = parseFloat(document.getElementById('regSaldo').value) || 0;
+
+  const userData = {
+    name: nameKey,
+    displayName: nameRaw,
+    rolle: selectedRolle,
+    wochenstunden,
+    startsaldo,
+    schedule,
+    eintraege: {},
+    erstellt: new Date().toISOString()
+  };
+
+  localStorage.setItem('stundenzettel_'+nameKey, JSON.stringify(userData));
+  localStorage.setItem('last_stundenzettel_user', nameKey);
+  location.href = 'worker.html';
+}
+
+// ─── ADMIN ───────────────────────────────────────────────
+function toggleAdmin() {
+  const sec = document.getElementById('adminSection');
+  const arrow = document.getElementById('adminArrow');
+  const open = sec.classList.toggle('visible');
+  arrow.textContent = open ? '▲' : '▼';
+}
+
+function checkPin() {
+  const val = document.getElementById('pinInput').value;
+  if (val === ADMIN_PIN) {
+    document.getElementById('adminLocked').style.display = 'none';
+    document.getElementById('adminContent').style.display = 'block';
+    renderAdminList();
+  }
+}
+
+function lockAdmin() {
+  document.getElementById('pinInput').value = '';
+  document.getElementById('adminLocked').style.display = 'block';
+  document.getElementById('adminContent').style.display = 'none';
+}
+
+function renderAdminList() {
+  const users = getAllUsers();
+  const container = document.getElementById('adminUserList');
+  if (!users.length) {
+    container.innerHTML = '<div class="empty-state">Keine Nutzer vorhanden.</div>';
+    return;
+  }
+  container.innerHTML = users.map(u => {
+    const dn = u.displayName || u.name.split('_').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ');
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #eee;">
+      <div>
+        <div style="font-weight:600;">${dn}</div>
+        <div style="font-size:12px;color:#aaa;">${u.wochenstunden} Std./Woche · ${Object.keys(u.eintraege||{}).length} Einträge</div>
+      </div>
+      <button class="btn-danger" onclick="deleteUser('${u.name}')">🗑 Löschen</button>
+    </div>`;
+  }).join('');
+}
+
+function deleteUser(name) {
+  const dn = name.split('_').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ');
+  if (!confirm(`${dn} wirklich löschen? Alle Daten gehen verloren.`)) return;
+  localStorage.removeItem('stundenzettel_'+name);
+  if (localStorage.getItem('last_stundenzettel_user') === name)
+    localStorage.removeItem('last_stundenzettel_user');
+  renderAdminList();
+  renderUserList();
+}
+</script>
+</body>
+</html>
