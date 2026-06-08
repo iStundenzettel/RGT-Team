@@ -11,8 +11,7 @@ body {
   font-family:'Poppins',sans-serif;
   background: linear-gradient(160deg, #0d2b14 0%, #2a7a3b 60%, #3db356 100%);
   min-height:100vh;
-  display:flex; flex-direction:column;
-  padding-bottom:90px;
+  padding-bottom:100px;
 }
 
 /* HEADER */
@@ -144,7 +143,7 @@ body {
 /* NÄCHSTER TERMIN */
 .next-card {
   background:rgba(10,40,18,0.75);
-  margin:auto 14px 0;
+  margin:10px 14px 0;
   border-radius:14px; color:white; overflow:hidden;
 }
 .next-row {
@@ -333,7 +332,7 @@ body {
         <div style="font-size:13px; color:#888; font-weight:500; white-space:nowrap; margin-top:2px;" id="cardTime">–:–</div>
       </div>
     </div>
-    <div class="ctrl-btns" style="align-self:center;">
+    <div class="ctrl-btns" style="align-self:center; margin-top:-8px;">
       <button class="btn-ctrl btn-minus" onclick="addHours(-0.5)">−</button>
       <button class="btn-ctrl btn-plus"  onclick="addHours(+0.5)">+</button>
     </div>
