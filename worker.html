@@ -573,7 +573,9 @@ TODAY.setHours(0,0,0,0);
 
 // ─── INIT ────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  let name = localStorage.getItem('last_stundenzettel_user');
+  // URL-Parameter prüfen (z.B. worker.html?user=Marc) – falls vorhanden, diesen nutzen
+  const urlParams = new URLSearchParams(window.location.search);
+  let name = urlParams.get('user') || localStorage.getItem('last_stundenzettel_user');
   if (!name) {
     const keys = Object.keys(localStorage).filter(k => k.startsWith('stundenzettel_'));
     if (!keys.length) { location.href='index.html'; return; }
