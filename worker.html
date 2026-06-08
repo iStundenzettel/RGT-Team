@@ -596,8 +596,9 @@ window.addEventListener('DOMContentLoaded', () => {
   userData.eintraege = entries;
   localStorage.setItem('stundenzettel_'+userData.name, JSON.stringify(userData));
 
-  // Anzeige-Name
-  const dn = name.split('_').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ');
+  // Anzeige-Name: displayName bevorzugen
+  const dn = userData.displayName ||
+    name.split('_').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ');
   document.getElementById('userName').textContent = dn;
   document.getElementById('weekHours').textContent =
     (+userData.wochenstunden).toLocaleString('de-DE') + ' Std.';
