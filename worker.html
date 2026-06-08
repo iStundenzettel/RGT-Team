@@ -15,10 +15,17 @@ body {
 }
 
 /* HEADER */
-.header { text-align:center; color:white; padding:18px 16px 8px; }
+.header { padding:16px 14px 14px; }
+.header-card {
+  background:rgba(0,0,0,0.25);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:20px;
+  padding:18px 16px 14px;
+  text-align:center; color:white;
+}
 .header-school { font-size:10px; letter-spacing:1.5px; color:rgba(255,255,255,0.5); margin-bottom:4px; }
 .header-sub { font-size:13px; letter-spacing:4px; color:rgba(255,255,255,0.65); margin-bottom:2px; font-weight:500; }
-.header-name { font-size:clamp(26px, 9vw, 44px); font-weight:700; line-height:1.05; margin-bottom:10px; }
+.header-name { font-size:clamp(26px, 9vw, 44px); font-weight:700; line-height:1.05; margin-bottom:12px; }
 .header-org { display:none; }
 .badges { display:flex; margin:0 14px; }
 .badge-bar {
@@ -279,12 +286,12 @@ body {
 <body>
 
 <div class="header">
-  <div class="header-school">RGT · Arnold-Janssen-Schule · Goch</div>
-  <div class="header-sub">STUNDENZETTEL</div>
-  <div class="header-name" id="userName">Marc Hoss</div>
-  <div class="header-org"></div>
-  <div class="badges">
-    <div class="badge-bar">
+  <div class="header-card">
+    <div class="header-school">RGT · Arnold-Janssen-Schule · Goch</div>
+    <div class="header-sub">STUNDENZETTEL</div>
+    <div class="header-name" id="userName">Marc Hoss</div>
+    <div class="header-org"></div>
+    <div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center;">
       <div class="badge-bar-item">
         <div class="badge-bar-label">Wochenstunden</div>
         <div class="badge-bar-value" id="weekHours" onclick="openOverview()">31 Std.</div>
