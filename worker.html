@@ -89,10 +89,10 @@ body {
 .progress-fill { height:100%; background:linear-gradient(to right,#3db356,#27ae60); transition:width 0.3s; }
 
 /* STATUS BUTTONS */
-.status-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:18px; }
+.status-row { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; margin-bottom:18px; }
 .btn-status {
   padding:13px 0; border:2px solid #e0e0e0; background:white;
-  border-radius:14px; font-size:14px; font-weight:600;
+  border-radius:14px; font-size:12px; font-weight:600;
   cursor:pointer; transition:all 0.15s; color:#555;
 }
 .btn-status:active { transform:scale(0.96); }
@@ -226,6 +226,7 @@ body {
   <div class="progress"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
 
   <div class="status-row">
+    <button class="btn-status" id="btn-normal" onclick="setStatus('normal')">✓ Normal</button>
     <button class="btn-status" id="btn-frei"   onclick="setStatus('frei')">⭐ Frei</button>
     <button class="btn-status" id="btn-krank"  onclick="setStatus('krank')">😷 Krank</button>
     <button class="btn-status" id="btn-schule" onclick="setStatus('schule')">🚫 Schule</button>
@@ -305,14 +306,14 @@ window.addEventListener('DOMContentLoaded', () => {
   entries = userData.eintraege || {};
   buildPlan();
 
-  // Migration: alte falsche schule/frei Werte korrigieren
+  // Migration: alte falsche Werte korrigieren
   Object.keys(entries).forEach(ds => {
     const e = entries[ds];
-    if (e.status === 'schule' || e.status === 'frei') {
-      const d = new Date(ds+'T12:00:00');
-      const plan = PLAN[d.getDay()];
-      if (plan) e.hours = -plan.soll;
-    }
+    const d = new Date(ds+'T12:00:00');
+    const plan = PLAN[d.getDay()];
+    if (!plan) return;
+    if (e.status === 'schule') e.hours = 0;
+    if (e.status === 'krank' || e.status === 'frei') e.hours = plan.soll;
   });
   userData.eintraege = entries;
   localStorage.setItem('stundenzettel_'+userData.name, JSON.stringify(userData));
@@ -373,7 +374,11 @@ function render() {
     entries[ds] = { hours: soll, status:'normal', notes:'' };
   }
   const entry = entries[ds];
-  todayVal = entry.hours;
+  if (entry.status === 'schule') {
+    todayVal = -soll; // Anzeige: −4,2
+  } else {
+    todayVal = entry.hours; // Normal, Krank, Frei: positiver Wert
+  }
 
   updateDisplay(soll);
   updateStatusBtns(entry.status||'normal');
@@ -430,17 +435,23 @@ function setStatus(status) {
   const dow = selectedDate.getDay();
   const soll = PLAN[dow] ? PLAN[dow].soll : 0;
 
-  if (!entries[ds]) entries[ds] = {hours:soll, status:'normal', notes:''};
-
-  if (status === 'schule' || status === 'frei') {
-    todayVal = -soll;
-  } else {
-    // Krank: Stunden bleiben, oder auf Soll setzen wenn 0
-    if (todayVal <= 0) todayVal = soll;
-  }
+  if (!entries[ds]) entries[ds] = {hours: soll, status:'normal', notes:''};
 
   entries[ds].status = status;
-  entries[ds].hours = todayVal;
+
+  if (status === 'schule') {
+    // Keine Schule = Minusstunden → 0h gearbeitet, Saldo = 0 - soll = -soll
+    entries[ds].hours = 0;
+    todayVal = 0;
+  } else if (status === 'krank' || status === 'frei') {
+    // Krank/Frei = neutral, Soll wird angerechnet
+    entries[ds].hours = soll;
+    todayVal = soll;
+  } else {
+    // Normal: wenn vorher 0, auf Soll zurücksetzen
+    if (entries[ds].hours === 0) entries[ds].hours = soll;
+    todayVal = entries[ds].hours;
+  }
 
   updateDisplay(soll);
   updateStatusBtns(status);
@@ -448,10 +459,11 @@ function setStatus(status) {
 }
 
 function updateStatusBtns(status) {
-  ['frei','krank','schule'].forEach(s => {
+  ['normal','frei','krank','schule'].forEach(s => {
     const b = document.getElementById('btn-'+s);
+    if (!b) return;
     b.classList.toggle('active', status === s);
-    if (status === s && (s==='schule'||s==='frei')) b.classList.add('rot');
+    if (status === s && s === 'schule') b.classList.add('rot');
     else b.classList.remove('rot');
   });
 }
