@@ -11,6 +11,7 @@ body {
   font-family:'Poppins',sans-serif;
   background: linear-gradient(160deg, #0d2b14 0%, #2a7a3b 60%, #3db356 100%);
   min-height:100vh;
+  display:flex; flex-direction:column;
   padding-bottom:90px;
 }
 
@@ -48,6 +49,7 @@ body {
   background:white; margin:10px 14px 0;
   border-radius:22px; padding:16px 18px;
   box-shadow:0 6px 24px rgba(0,0,0,0.13);
+  flex:1; display:flex; flex-direction:column;
 }
 
 /* HEUTE BADGE + DATE */
@@ -80,8 +82,8 @@ body {
 .hours-unit { font-size:13px; color:#aaa; margin-top:4px; }
 .ctrl-btns { display:flex; gap:10px; }
 .btn-ctrl {
-  width:60px; height:60px; border:none; border-radius:50%;
-  font-size:28px; font-weight:700; cursor:pointer;
+  width:66px; height:66px; border:none; border-radius:50%;
+  font-size:32px; font-weight:700; cursor:pointer;
   display:flex; align-items:center; justify-content:center;
   transition:transform 0.15s;
 }
@@ -192,8 +194,8 @@ body {
 
 /* GROSSER KALENDER/ZURÜCK BUTTON IN DER MITTE */
 .btn-cal-main {
-  width:64px; height:64px; border:none; border-radius:50%;
-  font-size:26px; cursor:pointer;
+  width:70px; height:70px; border:none; border-radius:50%;
+  font-size:28px; cursor:pointer;
   background: linear-gradient(135deg,#e05555,#c0392b);
   box-shadow:0 4px 16px rgba(192,57,43,0.5);
   transition:all 0.2s; color:white;
@@ -331,7 +333,7 @@ body {
         <div style="font-size:13px; color:#888; font-weight:500; white-space:nowrap; margin-top:2px;" id="cardTime">–:–</div>
       </div>
     </div>
-    <div class="ctrl-btns">
+    <div class="ctrl-btns" style="align-self:center;">
       <button class="btn-ctrl btn-minus" onclick="addHours(-0.5)">−</button>
       <button class="btn-ctrl btn-plus"  onclick="addHours(+0.5)">+</button>
     </div>
@@ -368,15 +370,15 @@ body {
   <textarea class="notes-input" id="notesInput" placeholder="Begründung für Änderungen..." style="min-height:72px; margin-bottom:0;"></textarea>
 </div>
 
-<!-- Nächster Termin – nur Hauptseite -->
+<!-- NÄCHSTER TERMIN EINZEILER -->
 <div class="next-card" id="nextCard" onclick="this.classList.toggle('open')">
   <div class="next-row">
     <span class="next-date-txt" id="nextDate">–</span>
     <div class="next-divider"></div>
     <span class="next-icon-txt" id="nextIcon">📅</span>
-    <span class="next-name-txt" id="nextName">–</span>
-    <span class="next-badge" id="nextCountdown">–</span>
-    <button class="next-add-btn" onclick="event.stopPropagation()">+</button>
+    <span class="next-name-txt" id="nextName">Kein Termin</span>
+    <span class="next-badge" id="nextCountdown"></span>
+    <button class="next-add-btn" onclick="event.stopPropagation(); addTermin()">+</button>
   </div>
   <div class="next-drawer">
     <div class="next-drawer-inner">
@@ -1006,6 +1008,10 @@ function closeOverview() {
   document.getElementById('overviewModal').classList.remove('open');
 }
 
+
+function addTermin() {
+  showToast('📅 Termin-Funktion kommt bald...');
+}
 
 function renderNextAppointment() {
   // Einfach: zeige nächsten Schultag/Ereignis falls vorhanden
