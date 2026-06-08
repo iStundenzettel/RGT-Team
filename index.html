@@ -498,11 +498,11 @@ function renderAdminList() {
     const shortName = nameParts.length > 1
       ? nameParts[0] + ' ' + nameParts[nameParts.length-1][0] + '.'
       : dn;
-    return `<div style="background:#fafafa;border:1px solid #eee;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;">
+    return `<div onclick="goToUser('${u.name}')" style="background:#fafafa;border:1px solid #eee;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;cursor:pointer;transition:background 0.15s;" onmousedown="this.style.background='#e8f8ee'" onmouseup="this.style.background='#fafafa'">
       <div style="font-size:13px;font-weight:700;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${shortName}</div>
       <div style="font-size:11px;color:#aaa;">${u.wochenstunden}h/W · ${Object.keys(u.eintraege||{}).length} Eintr.</div>
       <div style="font-size:15px;font-weight:800;color:${sc};background:${sb};padding:3px 8px;border-radius:8px;text-align:center;">${sign}${saldo.toLocaleString('de-DE')}h</div>
-      <button onclick="deleteUser('${u.name}')" style="font-size:10px;color:#d9534f;background:none;border:none;cursor:pointer;padding:2px 0;">🗑 löschen</button>
+      <button onclick="event.stopPropagation(); deleteUser('${u.name}')" style="font-size:10px;color:#d9534f;background:none;border:none;cursor:pointer;padding:2px 0;">🗑 löschen</button>
     </div>`;
   }).join('');
   container.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">${grid}</div>`;
