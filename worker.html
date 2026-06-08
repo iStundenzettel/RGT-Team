@@ -15,17 +15,23 @@ body {
 }
 
 /* HEADER */
-.header { text-align:center; color:white; padding:28px 20px 16px; }
-.header-sub { font-size:13px; letter-spacing:3px; opacity:0.8; margin-bottom:6px; }
-.header-name { font-size:44px; font-weight:800; margin-bottom:16px; }
+.header { text-align:center; color:white; padding:32px 20px 10px; }
+.header-sub { font-size:11px; letter-spacing:3px; opacity:0.7; margin-bottom:12px; }
+.header-name { font-size:44px; font-weight:600; margin-bottom:6px; }
 .header-org { font-size:13px; letter-spacing:2px; opacity:0.75; margin-bottom:14px; }
-.badges { display:flex; gap:10px; justify-content:center; }
-.badge {
-  background:rgba(255,255,255,0.18);
-  border:1px solid rgba(255,255,255,0.3);
-  padding:9px 18px; border-radius:20px;
-  font-size:14px; font-weight:600;
+.badges { display:flex; justify-content:center; }
+.badge-bar {
+  background:rgba(0,0,0,0.25);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px; padding:11px 20px;
+  display:flex; justify-content:space-around; align-items:center; gap:24px;
 }
+.badge-bar-item { text-align:center; }
+.badge-bar-label { font-size:10px; color:rgba(255,255,255,0.45); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:3px; }
+.badge-bar-value { font-size:17px; font-weight:700; color:white; cursor:pointer; }
+.badge-bar-value.neg { color:#f87171; }
+.badge-bar-value.pos { color:#86efac; }
+.badge-bar-divider { width:1px; height:28px; background:rgba(255,255,255,0.15); flex-shrink:0; }
 
 /* CARD */
 .card {
@@ -126,15 +132,39 @@ body {
 
 /* NÄCHSTER TERMIN */
 .next-card {
-  background:linear-gradient(135deg,#1a4a28,#3db356);
-  margin:14px 14px 0; border-radius:18px; padding:18px 20px;
-  color:white;
+  background:rgba(10,40,18,0.75);
+  margin:14px 14px 0; border-radius:14px;
+  color:white; overflow:hidden;
 }
-.next-label { font-size:11px; letter-spacing:2px; opacity:0.85; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
-.next-content { display:flex; justify-content:space-between; align-items:center; }
-.next-date { font-size:14px; opacity:0.9; }
-.next-name { font-size:18px; font-weight:700; margin-top:3px; }
-.next-countdown { background:rgba(255,255,255,0.2); padding:8px 14px; border-radius:14px; font-size:13px; font-weight:600; }
+.next-row {
+  display:flex; align-items:center; gap:8px;
+  padding:13px 14px; cursor:pointer;
+}
+.next-date-txt { font-size:13px; font-weight:500; color:#86efac; white-space:nowrap; }
+.next-divider { width:1px; height:16px; background:rgba(255,255,255,0.25); flex-shrink:0; }
+.next-icon-txt { font-size:14px; }
+.next-name-txt { font-size:13px; font-weight:600; color:white; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.next-badge { font-size:11px; color:rgba(255,255,255,0.6); background:rgba(255,255,255,0.1); padding:3px 8px; border-radius:8px; white-space:nowrap; }
+.next-add-btn {
+  background:rgba(10,40,18,0.5); border:1.5px solid rgba(61,179,86,0.25);
+  color:#86efac; font-size:20px; font-weight:300;
+  width:34px; height:34px; border-radius:10px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+/* Aufgeklappt */
+.next-drawer {
+  max-height:0; overflow:hidden;
+  transition:max-height 0.3s ease;
+  background:rgba(15,45,22,0.9);
+}
+.next-card.open .next-drawer { max-height:100px; }
+.next-drawer-inner {
+  padding:12px 14px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.next-drawer-name { font-size:15px; font-weight:700; color:white; }
+.next-drawer-date { font-size:12px; color:rgba(255,255,255,0.5); margin-top:3px; }
+.next-drawer-badge { background:rgba(61,179,86,0.25); border:1px solid rgba(61,179,86,0.35); padding:6px 12px; border-radius:10px; font-size:12px; font-weight:600; color:#86efac; }
 
 /* FOOTER */
 .footer {
@@ -239,17 +269,26 @@ body {
 <div class="header">
   <div class="header-sub">STUNDENZETTEL</div>
   <div class="header-name" id="userName">Marc Hoss</div>
-  <div class="header-org">RGT · AWO</div>
+  <div class="header-org">RGT · Arnold-Janssen-Schule</div>
   <div class="badges">
-    <div class="badge" id="weekHours" onclick="openOverview()" style="cursor:pointer;">31 Std. / Woche</div>
-    <div class="badge" id="saldoBadge">Saldo: +0h</div>
+    <div class="badge-bar">
+      <div class="badge-bar-item">
+        <div class="badge-bar-label">Wochenstunden</div>
+        <div class="badge-bar-value" id="weekHours" onclick="openOverview()">31 Std.</div>
+      </div>
+      <div class="badge-bar-divider"></div>
+      <div class="badge-bar-item">
+        <div class="badge-bar-label">Saldo</div>
+        <div class="badge-bar-value" id="saldoBadge">+0,0h</div>
+      </div>
+    </div>
   </div>
   <button onclick="openSettings()" style="
-    margin-top:12px; background:rgba(255,255,255,0.15);
-    border:1px solid rgba(255,255,255,0.3); color:white;
-    padding:8px 18px; border-radius:20px; font-size:13px;
-    font-weight:600; cursor:pointer; font-family:'Poppins',sans-serif;">
-    ⚙️ Einstellungen
+    margin-top:10px; background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.7);
+    padding:7px 16px; border-radius:20px; font-size:13px;
+    cursor:pointer; font-family:'Poppins',sans-serif;">
+    ⚙️
   </button>
 </div>
 
@@ -314,14 +353,23 @@ body {
 </div>
 
 <!-- Nächster Termin – nur Hauptseite -->
-<div class="next-card" id="nextCard">
-  <div class="next-label">📅 NÄCHSTER TERMIN</div>
-  <div class="next-content">
-    <div>
-      <div class="next-date" id="nextDate">–</div>
-      <div class="next-name" id="nextName">–</div>
+<div class="next-card" id="nextCard" onclick="this.classList.toggle('open')">
+  <div class="next-row">
+    <span class="next-date-txt" id="nextDate">–</span>
+    <div class="next-divider"></div>
+    <span class="next-icon-txt" id="nextIcon">📅</span>
+    <span class="next-name-txt" id="nextName">–</span>
+    <span class="next-badge" id="nextCountdown">–</span>
+    <button class="next-add-btn" onclick="event.stopPropagation()">+</button>
+  </div>
+  <div class="next-drawer">
+    <div class="next-drawer-inner">
+      <div>
+        <div class="next-drawer-name" id="nextDrawerName">–</div>
+        <div class="next-drawer-date" id="nextDrawerDate">–</div>
+      </div>
+      <div class="next-drawer-badge" id="nextDrawerBadge">–</div>
     </div>
-    <div class="next-countdown" id="nextCountdown">–</div>
   </div>
 </div>
 
@@ -459,7 +507,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const dn = name.split('_').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ');
   document.getElementById('userName').textContent = dn;
   document.getElementById('weekHours').textContent =
-    (+userData.wochenstunden).toLocaleString('de-DE') + ' Std. / Woche';
+    (+userData.wochenstunden).toLocaleString('de-DE') + ' Std.';
 
   renderNextAppointment();
   render();
@@ -718,8 +766,9 @@ function updateSaldo() {
   });
   saldo = Math.round(saldo*100)/100;
   const sign = saldo >= 0 ? '+' : '';
-  document.getElementById('saldoBadge').textContent =
-    'Saldo: '+sign+saldo.toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:2})+'h';
+  const el = document.getElementById('saldoBadge');
+  el.textContent = sign+saldo.toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:2})+'h';
+  el.className = 'badge-bar-value' + (saldo < 0 ? ' neg' : saldo > 0 ? ' pos' : '');
 }
 
 // ─── SAVE ────────────────────────────────────────────────
