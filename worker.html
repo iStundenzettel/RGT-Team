@@ -554,7 +554,7 @@ body {
         color:white;border:none;border-radius:12px;
         font-size:13px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;
         box-shadow:0 3px 10px rgba(61,179,86,0.3);">
-        ↩ Zurück zu Heute
+        ↩ zurück
       </button>
     </div>
   </div>
@@ -939,7 +939,7 @@ function updateCalBtn() {
   } else {
     btn.textContent = '↩';
     btn.classList.add('is-back');
-    btn.title = 'Zurück zu Heute';
+    btn.title = 'zurück';
   }
 }
 
@@ -1042,38 +1042,72 @@ function confirmDeleteData() {
 // ─── STUNDENPLAN ─────────────────────────────────────────
 function openStundenplan() {
   const TAGE = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
-  const rows = TAGE.map((tag, i) => {
-    const dow = i + 1;
-    const p = PLAN[dow] || { von:'08:00', bis:'16:00', soll:0 };
-    return `<div style="margin-bottom:14px;">
-      <div style="font-size:11px;font-weight:700;color:#3db356;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">${tag}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
-        <div>
-          <div style="font-size:10px;color:#aaa;margin-bottom:3px;">Von</div>
-          <input type="time" id="sp_von_${dow}" value="${p.von}"
-            style="width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:14px;font-family:'Poppins',sans-serif;">
-        </div>
-        <div>
-          <div style="font-size:10px;color:#aaa;margin-bottom:3px;">Bis</div>
-          <input type="time" id="sp_bis_${dow}" value="${p.bis}"
-            style="width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:14px;font-family:'Poppins',sans-serif;">
-        </div>
-        <div>
-          <div style="font-size:10px;color:#aaa;margin-bottom:3px;">Stunden</div>
-          <input type="number" id="sp_soll_${dow}" value="${p.soll}" step="0.1" min="0" max="12"
-            style="width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:14px;font-family:'Poppins',sans-serif;text-align:center;">
-        </div>
-      </div>
-    </div>`;
-  }).join('<div style="height:1px;background:#f0f0f0;margin:4px 0;"></div>');
+  
+  // ─── KOMPAKTE ÜBERSICHT (oben) ───
+  const overviewRows = TAGE.map((tag, idx) => {
+    const day = idx + 1;
+    const plan = PLAN[day] || {};
+    const von = plan.von || '09:00';
+    const bis = plan.bis || '17:00';
+    const std = plan.soll || 8;
+    return `<span style="font-size:11px;padding:4px 8px;background:#f0f0f0;border-radius:6px;white-space:nowrap;">${tag.substring(0,2)}: ${von}–${bis} <b>${std}h</b></span>`;
+  }).join('');
+
+  // ─── SCHULSTUNDENPLAN (neu) ───
+  const stundenplan = [
+    { stunde: '1. Stunde', zeit: '08:05–08:50' },
+    { stunde: '2. Stunde', zeit: '08:50–09:35' },
+    { stunde: 'Pause', zeit: '09:35–10:05', pause: true },
+    { stunde: '3. Stunde', zeit: '10:05–10:50' },
+    { stunde: '4. Stunde', zeit: '10:50–11:35' },
+    { stunde: 'Pause', zeit: '11:35–11:50', pause: true },
+    { stunde: '5. Stunde', zeit: '11:50–12:35' },
+    { stunde: '6. Stunde', zeit: '12:35–13:20' },
+    { stunde: 'Pause', zeit: '13:20–13:30', pause: true },
+    { stunde: '7. Stunde', zeit: '13:30–14:15' },
+    { stunde: '8. Stunde', zeit: '14:15–15:00' },
+    { stunde: '9. Stunde', zeit: '15:00–16:00' }
+  ];
+
+  const selectedDate = new Date();
+  const dayOfWeek = selectedDate.getDay(); // 0=Sonntag, 1=Montag
+  const dayIndex = dayOfWeek === 0 ? 4 : dayOfWeek - 1; // Montag=0
+  const dayName = TAGE[dayIndex] || 'Montag';
+  
+  let stundenplanHTML = '';
+  stundenplan.forEach((s, i) => {
+    const key = `stundenplan_${dayName}_${i}`;
+    const saved = localStorage.getItem(key) || '';
+    if (s.pause) {
+      stundenplanHTML += `
+        <div style="padding:10px 12px;background:#fff3cd;border-radius:8px;margin-bottom:6px;text-align:center;font-size:12px;color:#666;">
+          ☕ ${s.stunde} (${s.zeit})
+        </div>`;
+    } else {
+      stundenplanHTML += `
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+          <div style="flex:0 0 75px;font-size:11px;color:#666;font-weight:600;">${s.zeit}</div>
+          <input type="text" value="${saved}" placeholder="${s.stunde}" 
+            onchange="localStorage.setItem('stundenplan_${dayName}_${i}', this.value)"
+            style="flex:1;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:Poppins,sans-serif;">
+        </div>`;
+    }
+  });
 
   document.getElementById('stundenplanContent').innerHTML = `
-    <div style="margin-bottom:16px;">
-      <div style="font-size:12px;color:#888;line-height:1.6;">
-        Hier kannst du deine wöchentlichen Arbeitszeiten eintragen. Die Stunden werden für die Saldo-Berechnung verwendet.
+    <div style="padding:12px;background:#f9f9f9;border-radius:10px;margin-bottom:16px;">
+      <div style="font-size:10px;color:#999;margin-bottom:6px;font-weight:600;">📊 WÖCHENTLICHE ARBEITSZEITEN:</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${overviewRows}
       </div>
     </div>
-    ${rows}`;
+    
+    <div style="margin-bottom:12px;">
+      <div style="font-size:12px;font-weight:700;color:#3db356;margin-bottom:10px;">📚 PERSÖNLICHER STUNDENPLAN – ${dayName}</div>
+      <div style="font-size:11px;color:#888;margin-bottom:12px;">Trage hier deine Fächer/Aktivitäten ein (z.B. Deutsch, Mathe, Sport):</div>
+      ${stundenplanHTML}
+    </div>`;
+  
   document.getElementById('stundenplanModal').classList.add('open');
 }
 
