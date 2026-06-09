@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Stundenzettel</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family:'Poppins',sans-serif;
+  background: linear-gradient(160deg, #0d2b14 0%, #2a7a3b 60%, #3db356 100%);
+  min-height:100vh;
+  padding-bottom:100px;
+}
+
+/* HEADER */
+.header { padding:16px 14px 14px; }
+.header-card {
+  background:rgba(0,0,0,0.25);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:20px;
+  padding:18px 16px 14px;
+  text-align:center; color:white;
+}
+.header-school { font-size:10px; letter-spacing:1.5px; color:rgba(255,255,255,0.5); margin-bottom:4px; }
+.header-sub { font-size:13px; letter-spacing:4px; color:rgba(255,255,255,0.65); margin-bottom:2px; font-weight:500; }
+.header-name { font-size:clamp(26px, 9vw, 44px); font-weight:700; line-height:1.05; margin-bottom:12px; }
+.header-org { display:none; }
+.badges { display:flex; margin:0 14px; }
+.badge-bar {
+  background:rgba(0,0,0,0.25);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px; padding:11px 16px;
+  display:flex; justify-content:space-between;
+  align-items:center; width:100%;
+}
+.badge-bar-item { text-align:center; flex:1; }
+.badge-bar-label { font-size:9px; color:rgba(255,255,255,0.45); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:3px; }
+.badge-bar-value { font-size:16px; font-weight:700; color:white; cursor:pointer; }
+.badge-bar-value.neg { color:#f87171; }
+.badge-bar-value.pos { color:#86efac; }
+.badge-bar-divider { width:1px; height:28px; background:rgba(255,255,255,0.15); flex-shrink:0; margin:0 4px; }
+.badge-bar-icon { font-size:20px; cursor:pointer; }
+
+/* CARD */
+.card {
+  background:white; margin:7px 14px 0;
+  border-radius:22px; padding:16px 18px;
+  box-shadow:0 6px 24px rgba(0,0,0,0.13);
+}
+
+/* HEUTE BADGE + DATE */
+.card-top {
+  display:flex; justify-content:space-between; align-items:flex-start;
+  margin-bottom:16px;
+}
+.heute-badge {
+  background:#3db356; color:white;
+  padding:8px 16px; border-radius:20px;
+  font-size:12px; font-weight:700; letter-spacing:1px;
+}
+.date-selected-badge {
+  background:#4f9ff0; color:white;
+  padding:8px 16px; border-radius:20px;
+  font-size:14px; font-weight:700;
+  cursor:pointer;
+}
+.card-date-right { text-align:right; }
+.card-date-right .day { font-size:17px; font-weight:700; color:#222; }
+.card-date-right .time { font-size:13px; color:#888; margin-top:3px; }
+
+/* STUNDEN ROW */
+.hours-row {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:0;
+  margin-top:-4px;
+}
+.hours-value { font-size:56px; font-weight:800; color:#3db356; line-height:1; letter-spacing:-1px; }
+.hours-value.negative { color:#d9534f; }
+.hours-unit { font-size:13px; color:#aaa; margin-top:4px; }
+.ctrl-btns { display:flex; gap:10px; }
+.btn-ctrl {
+  width:72px; height:72px; border:none; border-radius:50%;
+  font-size:36px; font-weight:700; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:transform 0.15s;
+}
+.btn-ctrl:active { transform:scale(0.92); }
+.btn-minus { background:#ffcccc; color:#c0392b; }
+.btn-plus  { background:#c8f0d4; color:#27ae60; }
+
+/* SOLL ROW */
+.soll-row {
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:12px; margin-bottom:6px;
+}
+.soll-label { color:#aaa; font-weight:500; }
+.soll-status { color:#3db356; font-weight:600; }
+.soll-status.over { color:#3db356; }
+.soll-status.under { color:#e67e22; }
+.soll-status.negative { color:#d9534f; }
+
+/* PROGRESS */
+.progress { height:5px; background:#eee; border-radius:4px; overflow:hidden; margin-bottom:10px; }
+.progress-fill { height:100%; background:linear-gradient(to right,#3db356,#27ae60); transition:width 0.3s; }
+
+/* STATUS BUTTONS */
+.status-row { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:7px; margin-bottom:10px; }
+.btn-status {
+  padding:10px 0; border:2px solid #e0e0e0; background:white;
+  border-radius:14px; font-size:12px; font-weight:600;
+  cursor:pointer; transition:all 0.15s; color:#555;
+}
+.btn-team {
+  width:100%; padding:13px; margin-bottom:18px;
+  border:2px solid #e0e0e0; background:white;
+  border-radius:14px; font-size:14px; font-weight:600;
+  cursor:pointer; color:#555; transition:all 0.15s;
+  font-family:'Poppins',sans-serif;
+}
+.btn-verlaeng {
+  padding:10px 4px; border:2px solid #e8eef5; background:white;
+  border-radius:10px; font-size:12px; font-weight:600;
+  cursor:pointer; color:#4f9ff0; font-family:'Poppins',sans-serif;
+  transition:all 0.15s;
+}
+.btn-verlaeng.selected { border-color:#4f9ff0; background:#f0f7ff; color:#4f9ff0; }
+.btn-team .teamLabel { font-size:12px; opacity:0.7; margin-left:4px; }
+.btn-status.active         { border-color:#3db356; background:#f0faf3; color:#27ae60; }
+.btn-status.active-frei    { border-color:#f59e0b; background:#fffbeb; color:#d97706; }
+.btn-status.active-krank   { border-color:#60a5fa; background:#eff6ff; color:#3b82f6; }
+.btn-status.active-schule  { border-color:#ef4444; background:#fff1f2; color:#dc2626; }
+
+/* NOTES */
+.notes-label { font-size:12px; color:#bbb; font-weight:600; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
+.notes-input {
+  width:100%; padding:14px; border:1.5px solid #e8e8e8;
+  border-radius:14px; font-family:'Poppins',sans-serif;
+  font-size:14px; resize:none; min-height:100px; color:#333;
+}
+.notes-input:focus { outline:none; border-color:#3db356; }
+
+/* NÄCHSTER TERMIN */
+.next-card {
+  background:rgba(10,40,18,0.75);
+  margin:7px 14px 0;
+  border-radius:14px; color:white; overflow:hidden;
+}
+.next-row {
+  display:flex; align-items:center; gap:8px;
+  padding:13px 14px; cursor:pointer;
+}
+.next-date-txt { font-size:13px; font-weight:500; color:#86efac; white-space:nowrap; }
+.next-divider { width:1px; height:16px; background:rgba(255,255,255,0.25); flex-shrink:0; }
+.next-icon-txt { font-size:14px; }
+.next-name-txt { font-size:13px; font-weight:600; color:white; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.next-badge { font-size:11px; color:rgba(255,255,255,0.6); background:rgba(255,255,255,0.1); padding:3px 8px; border-radius:8px; white-space:nowrap; }
+.next-add-btn {
+  background:rgba(10,40,18,0.5); border:1.5px solid rgba(61,179,86,0.25);
+  color:#86efac; font-size:20px; font-weight:300;
+  width:34px; height:34px; border-radius:10px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+/* Aufgeklappt */
+.next-drawer {
+  max-height:0; overflow:hidden;
+  transition:max-height 0.3s ease;
+  background:rgba(15,45,22,0.9);
+}
+.next-card.open .next-drawer { max-height:100px; }
+.next-drawer-inner {
+  padding:12px 14px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.next-drawer-name { font-size:15px; font-weight:700; color:white; }
+.next-drawer-date { font-size:12px; color:rgba(255,255,255,0.5); margin-top:3px; }
+.next-drawer-badge { background:rgba(61,179,86,0.25); border:1px solid rgba(61,179,86,0.35); padding:6px 12px; border-radius:10px; font-size:12px; font-weight:600; color:#86efac; }
+
+/* FOOTER */
+.footer {
+  position:fixed; bottom:0; left:0; right:0;
+  display:flex; justify-content:space-around; align-items:center;
+  background:linear-gradient(to top,#0a1f0e 70%,rgba(10,31,14,0.85));
+  padding:12px 16px 24px;
+}
+.btn-footer {
+  width:48px; height:48px; border:none; border-radius:14px;
+  font-size:22px; cursor:pointer;
+  background:rgba(255,255,255,0.12); transition:all 0.15s;
+}
+.btn-footer:active { transform:scale(0.93); }
+
+/* GROSSER KALENDER/ZURÜCK BUTTON IN DER MITTE */
+.btn-cal-main {
+  width:70px; height:70px; border:none; border-radius:50%;
+  font-size:28px; cursor:pointer;
+  background: linear-gradient(135deg,#e05555,#c0392b);
+  box-shadow:0 4px 16px rgba(192,57,43,0.5);
+  transition:all 0.2s; color:white;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Poppins',sans-serif; font-weight:700;
+}
+.btn-cal-main.is-back {
+  background:linear-gradient(135deg,#4f9ff0,#357abd);
+  box-shadow:0 4px 16px rgba(79,159,240,0.5);
+  font-size:18px;
+}
+.btn-cal-main:active { transform:scale(0.93); }
+
+/* SAVE TOAST */
+.toast {
+  position:fixed; top:16px; left:50%; transform:translateX(-50%);
+  background:#27ae60; color:white; padding:10px 22px;
+  border-radius:20px; font-size:13px; font-weight:600;
+  opacity:0; transition:opacity 0.3s; pointer-events:none; z-index:999;
+}
+.toast.show { opacity:1; }
+
+/* CALENDAR MODAL */
+.modal {
+  display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.55); z-index:1000;
+  align-items:flex-end;
+}
+.modal.open { display:flex; }
+.modal-box {
+  background:white; width:100%; border-radius:24px 24px 0 0;
+  padding:14px 14px 16px;
+  max-height:94vh;
+  display:flex; flex-direction:column;
+}
+.modal-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.modal-title { font-size:20px; font-weight:800; color:#3db356; text-align:center; flex:1; }
+.btn-close { background:#f0f0f0; border:none; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; }
+.month-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.month-nav-btn { background:#f0f0f0; border:none; width:40px; height:40px; border-radius:50%; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.month-name { font-size:17px; font-weight:700; }
+.cal-headers { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; margin-bottom:4px; padding:0 4px; }
+.cal-hd { text-align:center; font-size:11px; color:#bbb; font-weight:700; padding:4px 0; letter-spacing:1px; }
+.cal-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; padding:0 4px; flex:1; }
+.cal-day {
+  aspect-ratio:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  border-radius:8px; cursor:pointer;
+  font-size:12px; font-weight:700;
+  color:#333; transition:transform 0.15s;
+  background:#f8f8f8; position:relative;
+}
+.cal-day:active { transform:scale(0.93); }
+.cal-day.other-month { opacity:0.2; pointer-events:none; }
+.cal-day.is-today {
+  background:#3db356; color:white;
+  box-shadow:0 4px 14px rgba(61,179,86,0.4);
+}
+.cal-day.is-selected { box-shadow:0 0 0 3px #3db356; }
+.cal-day.status-normal { background:#d1fae5; color:#065f46; border:2px solid #6ee7b7; }
+.cal-day.status-schule { background:#fee2e2; color:#991b1b; border:2px solid #fca5a5; }
+.cal-day.status-frei   { background:#fef3c7; color:#92400e; border:2px solid #fcd34d; }
+.cal-day.status-krank  { background:#dbeafe; color:#1e40af; border:2px solid #93c5fd; }
+.cal-day.is-today.status-normal { background:#3db356; color:white; border:2px solid #27ae60; }
+.cal-day .cal-stunden { font-size:9px; font-weight:600; opacity:0.75; margin-top:1px; line-height:1; }
+.cal-day.is-today .cal-stunden { opacity:0.9; }
+
+/* Nächster Termin im Kalender */
+.cal-next-termin { display:none !important; }
+.cal-next-termin-inner { display:flex; justify-content:space-between; align-items:center; }
+.cal-next-label { font-size:9px; color:#aaa; letter-spacing:1px; text-transform:uppercase; margin-bottom:3px; }
+.cal-next-name { font-size:13px; font-weight:600; color:#1a6b35; }
+.cal-next-date { font-size:11px; color:#3db356; font-weight:600; }
+
+.btn-heute {
+  margin:10px 4px 0; padding:11px 18px;
+  background:transparent;
+  color:#3db356; 
+  border:2px solid #3db356;
+  border-radius:50px; font-size:14px; font-weight:700;
+  cursor:pointer; font-family:'Poppins',sans-serif;
+  display:flex; align-items:center; justify-content:center;
+  gap:8px; width:calc(100% - 8px); flex-shrink:0;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-card">
+    <div class="header-school">RGT · Arnold-Janssen-Schule · Goch</div>
+    <div class="header-sub">STUNDENZETTEL</div>
+    <div class="header-name" id="userName">Marc Hoss</div>
+    <div class="header-org"></div>
+    <div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center;">
+      <div class="badge-bar-item">
+        <div class="badge-bar-label">Wochenstunden</div>
+        <div class="badge-bar-value" id="weekHours" onclick="openStundenplan()" style="cursor:pointer;">31 Std.</div>
+      </div>
+      <div class="badge-bar-divider"></div>
+      <div class="badge-bar-item">
+        <div class="badge-bar-label">Saldo</div>
+        <div class="badge-bar-value" id="saldoBadge">+0,0h</div>
+      </div>
+      <div class="badge-bar-divider"></div>
+      <div class="badge-bar-item" onclick="openOverview()" style="cursor:pointer;">
+        <div class="badge-bar-label">Verlauf</div>
+        <div class="badge-bar-icon">📊</div>
+      </div>
+      <div class="badge-bar-divider"></div>
+      <div class="badge-bar-item" onclick="openSettings()" style="cursor:pointer;">
+        <div class="badge-bar-label">Einstellungen</div>
+        <div class="badge-bar-icon">⚙️</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="mainCard">
+  <div class="card-top">
+    <div class="heute-badge" id="heuteBadge">HEUTE</div>
+    <div class="card-date-right">
+      <div class="day" id="cardDay" style="font-size:20px; font-weight:700; color:#222;">Mo, 8. Juni</div>
+    </div>
+  </div>
+
+  <div class="hours-row">
+    <div style="display:flex; align-items:flex-end; gap:10px;">
+      <div class="hours-value" id="hoursVal">0,00</div>
+      <div style="padding-bottom:6px;">
+        <div class="hours-unit">Std.</div>
+        <div style="font-size:13px; color:#888; font-weight:500; white-space:nowrap; margin-top:2px;" id="cardTime">–:–</div>
+      </div>
+    </div>
+    <div class="ctrl-btns" style="align-self:center; margin-top:-8px;">
+      <button class="btn-ctrl btn-minus" onclick="addHours(-0.5)">−</button>
+      <button class="btn-ctrl btn-plus"  onclick="addHours(+0.5)">+</button>
+    </div>
+  </div>
+
+  <div class="soll-row">
+    <span class="soll-label" id="sollLabel">Soll: 0,00h</span>
+    <span class="soll-status" id="sollStatus">–</span>
+  </div>
+
+  <div class="progress"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+
+  <div class="status-row">
+    <button class="btn-status" id="btn-normal" onclick="setStatus('normal')">✓ Normal</button>
+    <button class="btn-status" id="btn-frei"   onclick="setStatus('frei')">⭐ Frei</button>
+    <button class="btn-status" id="btn-krank"  onclick="setStatus('krank')">😷 Krank</button>
+    <button class="btn-status" id="btn-schule" onclick="setStatus('schule')">🚫 Schule</button>
+  </div>
+
+  <!-- TEAMTAG TOGGLE + VERLÄNGERUNG -->
+  <button class="btn-team" id="btn-team" onclick="toggleTeam()" style="display:none;">
+    🤝 Teamtag <span id="teamLabel">+1h</span>
+  </button>
+  <div id="teamVerlaengerung" style="display:none; margin-bottom:18px;">
+    <div style="font-size:12px;color:#aaa;font-weight:600;margin-bottom:8px;">Team verlängert um...</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
+      <button class="btn-verlaeng" id="tv15"  onclick="teamVerlaengerung(0.25)">+15 min</button>
+      <button class="btn-verlaeng" id="tv30"  onclick="teamVerlaengerung(0.5)">+30 min</button>
+      <button class="btn-verlaeng" id="tv45"  onclick="teamVerlaengerung(0.75)">+45 min</button>
+      <button class="btn-verlaeng" id="tv60"  onclick="teamVerlaengerung(1.0)">+60 min</button>
+    </div>
+  </div>
+
+  <textarea class="notes-input" id="notesInput" placeholder="Begründung für Änderungen..." style="min-height:72px; margin-bottom:0;"></textarea>
+</div>
+
+<!-- NÄCHSTER TERMIN EINZEILER -->
+<div class="next-card" id="nextCard">
+  <div class="next-row" onclick="document.getElementById('nextCard').classList.toggle('open')">
+    <span class="next-date-txt" id="nextDate" style="color:rgba(255,255,255,0.4);">–</span>
+    <div class="next-divider"></div>
+    <span class="next-icon-txt" id="nextIcon">📅</span>
+    <span class="next-name-txt" id="nextName" style="color:rgba(255,255,255,0.5);">Kein Termin</span>
+    <span class="next-badge" id="nextCountdown" style="display:none;"></span>
+    <button class="next-add-btn" onclick="event.stopPropagation(); addTermin()" style="color:#86efac; font-size:22px;">+</button>
+  </div>
+  <div class="next-drawer">
+    <div class="next-drawer-inner">
+      <div>
+        <div class="next-drawer-name" id="nextDrawerName">–</div>
+        <div class="next-drawer-date" id="nextDrawerDate">–</div>
+      </div>
+      <div class="next-drawer-badge" id="nextDrawerBadge">–</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <button class="btn-footer" onclick="openSaveOptions()" title="Speichern">💾</button>
+  <button class="btn-footer" onclick="openArchiv()" title="Dokumente">📁</button>
+  <button class="btn-cal-main" id="btnCalMain" onclick="calMainAction()">📅</button>
+  <button class="btn-footer" onclick="shareJanine()" title="Teilen">📤</button>
+  <button class="btn-footer" onclick="printView()" title="Drucken">🖨️</button>
+</div>
+
+<div class="toast" id="toast">Gespeichert ✓</div>
+
+<!-- EINSTELLUNGEN MODAL -->
+<div class="modal" id="settingsModal">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div class="modal-title">⚙️ Einstellungen</div>
+      <button class="btn-close" onclick="closeSettings()">✕</button>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Startsaldo / Übertrag</div>
+      <div style="font-size:13px;color:#888;margin-bottom:10px;">Stunden aus vorherigen Monaten. Minus = du schuldest noch Stunden.</div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input type="number" id="settingsSaldo" step="0.1" placeholder="z.B. -5 oder +3"
+          style="flex:1;padding:13px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;font-family:'Poppins',sans-serif;">
+        <span style="color:#aaa;font-size:13px;">Std.</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Wochenstunden</div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input type="number" id="settingsWochen" step="0.5" min="1" max="50"
+          style="flex:1;padding:13px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;font-family:'Poppins',sans-serif;">
+        <span style="color:#aaa;font-size:13px;">Std. / Woche</span>
+      </div>
+    </div>
+
+    <button class="btn-heute" onclick="saveSettings()" style="margin-bottom:10px;">✓ Speichern</button>
+
+    <div style="border-top:1px solid #eee;margin:16px 0;"></div>
+
+    <button onclick="goHome()" style="
+      width:100%;padding:13px;background:#f5f5f5;color:#666;
+      border:none;border-radius:12px;font-size:14px;font-weight:600;
+      cursor:pointer;font-family:'Poppins',sans-serif;margin-bottom:10px;">
+      🏠 Zurück zur Startseite
+    </button>
+
+    <button onclick="confirmDeleteData()" style="
+      width:100%;padding:13px;background:#fff0f0;color:#d9534f;
+      border:1.5px solid #f5c0c0;border-radius:12px;font-size:14px;
+      font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">
+      🗑 Alle meine Einträge löschen
+    </button>
+  </div>
+</div>
+
+<!-- SPEICHERN-OPTIONEN MODAL -->
+<div class="modal" id="saveModal">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div style="width:32px;"></div>
+      <div class="modal-title">💾 Speichern</div>
+      <button class="btn-close" onclick="closeSaveModal()">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0 8px;">
+      <button onclick="manualSave(); closeSaveModal();" style="
+        padding:16px;background:#f0faf3;border:1.5px solid #3db356;
+        border-radius:14px;font-size:14px;font-weight:600;color:#27ae60;
+        cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:24px;">💾</span>
+        <div><div style="font-weight:700;">Daten speichern</div>
+        <div style="font-size:12px;color:#aaa;margin-top:2px;">Alle Einträge lokal auf dem Gerät sichern</div></div>
+      </button>
+      <button onclick="savePDF();" style="
+        padding:16px;background:#f0f7ff;border:1.5px solid #4f9ff0;
+        border-radius:14px;font-size:14px;font-weight:600;color:#357abd;
+        cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:24px;">📄</span>
+        <div><div style="font-weight:700;">Als PDF speichern</div>
+        <div style="font-size:12px;color:#aaa;margin-top:2px;">Aktuelle Ansicht als PDF exportieren</div></div>
+      </button>
+      <button onclick="saveSnapshot();" style="
+        padding:16px;background:#fafafa;border:1.5px solid #e0e0e0;
+        border-radius:14px;font-size:14px;font-weight:600;color:#555;
+        cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:24px;">📊</span>
+        <div><div style="font-weight:700;">Monatsbericht speichern</div>
+        <div style="font-size:12px;color:#aaa;margin-top:2px;">Aktuellen Monat als Eintrag im Archiv ablegen</div></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ARCHIV MODAL -->
+<div class="modal" id="archivModal">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div style="width:32px;"></div>
+      <div class="modal-title">📁 Meine Dokumente</div>
+      <button class="btn-close" onclick="closeArchiv()">✕</button>
+    </div>
+    <div id="archivContent" style="overflow-y:auto;flex:1;"></div>
+    <button class="btn-heute" onclick="closeArchiv()">✕ Schließen</button>
+  </div>
+</div>
+
+<!-- ÜBERSICHT MODAL -->
+<div class="modal" id="overviewModal">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div style="width:32px;"></div>
+      <div class="modal-title">📊 Verlauf</div>
+      <button class="btn-close" onclick="closeOverview()">✕</button>
+    </div>
+    <div id="overviewContent" style="overflow-y:auto; flex:1;"></div>
+    <button class="btn-heute" onclick="closeOverview()">✕ Schließen</button>
+  </div>
+</div>
+
+<!-- STUNDENPLAN MODAL -->
+<div class="modal" id="stundenplanModal">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div style="width:32px;"></div>
+      <div class="modal-title">📋 Mein Stundenplan</div>
+      <button class="btn-close" onclick="closeStundenplan()">✕</button>
+    </div>
+    <div id="stundenplanContent" style="overflow-y:auto; flex:1;"></div>
+    <button class="btn-heute" onclick="saveStundenplan()">✓ Speichern</button>
+  </div>
+</div>
+
+<!-- KALENDER MODAL -->
+<div class="modal" id="calModal">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div style="width:32px;"></div>
+      <div class="modal-title" style="color:#4f9ff0;">Kalender</div>
+      <button class="btn-close" onclick="closeCalendar()">✕</button>
+    </div>
+    <div class="month-nav">
+      <button class="month-nav-btn" onclick="prevMonth()">‹</button>
+      <div class="month-name" id="monthName">Juni 2026</div>
+      <button class="month-nav-btn" onclick="nextMonth()">›</button>
+    </div>
+    <div class="cal-headers">
+      <div class="cal-hd">Mo</div>
+      <div class="cal-hd">Di</div>
+      <div class="cal-hd">Mi</div>
+      <div class="cal-hd">Do</div>
+      <div class="cal-hd">Fr</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+
+    <div style="display:flex;gap:8px;margin:8px 4px 0;">
+      <button onclick="closeCalendar()" style="
+        flex:1;padding:11px;background:transparent;
+        color:#aaa;border:1.5px solid #e0e0e0;border-radius:12px;
+        font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">
+        ✕ Schließen
+      </button>
+      <button onclick="goToToday()" style="
+        flex:2;padding:11px;background:#3db356;
+        color:white;border:none;border-radius:12px;
+        font-size:13px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;
+        box-shadow:0 3px 10px rgba(61,179,86,0.3);">
+        ↩ zurück
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────
+let userData = null, entries = {}, PLAN = {};
+let selectedDate = new Date();
+let calDate = new Date();
+let todayVal = 0;
+let saveTimer = null;
+
+const TODAY = new Date();
+TODAY.setHours(0,0,0,0);
+
+// ─── INIT ────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  // URL-Parameter prüfen (z.B. worker.html?user=Marc) – falls vorhanden, diesen nutzen
+  const urlParams = new URLSearchParams(window.location.search);
+  let name = urlParams.get('user') || localStorage.getItem('last_stundenzettel_user');
+  if (!name) {
+    const keys = Object.keys(localStorage).filter(k => k.startsWith('stundenzettel_'));
+    if (!keys.length) { location.href='index.html'; return; }
+    name = keys[0].replace('stundenzettel_','');
+  }
+  userData = JSON.parse(localStorage.getItem('stundenzettel_'+name)||'null');
+  if (!userData) { location.href='index.html'; return; }
+
+  entries = userData.eintraege || {};
+  buildPlan();
+
+  // Migration: alte falsche Werte korrigieren
+  Object.keys(entries).forEach(ds => {
+    const e = entries[ds];
+    const d = new Date(ds+'T12:00:00');
+    const plan = PLAN[d.getDay()];
+    if (!plan) return;
+    if (e.status === 'schule') e.hours = 0;
+    if (e.status === 'krank' || e.status === 'frei') e.hours = plan.soll;
+  });
+  userData.eintraege = entries;
+  localStorage.setItem('stundenzettel_'+userData.name, JSON.stringify(userData));
+
+  // Anzeige-Name: displayName bevorzugen
+  const dn = userData.displayName ||
+    name.split('_').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ');
+  document.getElementById('userName').textContent = dn;
+  document.getElementById('weekHours').textContent =
+    (+userData.wochenstunden).toLocaleString('de-DE') + ' Std.';
+
+  renderNextAppointment();
+  render();
+});
+
+// ─── PLAN ────────────────────────────────────────────────
+function buildPlan() {
+  const map = {Montag:1,Dienstag:2,Mittwoch:3,Donnerstag:4,Freitag:5};
+  PLAN = {};
+  (userData.schedule||[]).forEach(s => {
+    const d = map[s.day];
+    if (d) PLAN[d] = {
+      von: s.von||'08:00',
+      bis: s.bis||'15:00',
+      soll: parseFloat(s.soll)||0,
+      teamtag: s.teamtag || false
+    };
+  });
+}
+
+// ─── DATE HELPERS ────────────────────────────────────────
+function fmtDate(d) {
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+// ─── RENDER ──────────────────────────────────────────────
+function render() {
+  const ds = fmtDate(selectedDate);
+  const dow = selectedDate.getDay(); // 0=So,1=Mo,...,5=Fr,6=Sa
+  const plan = PLAN[dow];
+
+  // Header-Datum
+  const isToday = fmtDate(selectedDate) === fmtDate(new Date());
+  const dayStr = selectedDate.toLocaleDateString('de-DE',{weekday:'short'});
+  const datStr = selectedDate.getDate()+'. '+selectedDate.toLocaleDateString('de-DE',{month:'long'});
+  document.getElementById('cardDay').textContent = dayStr.replace('.','')+', '+datStr;
+  document.getElementById('cardTime').textContent = plan ? plan.von+'–'+plan.bis : '–:–';
+
+  // HEUTE Badge
+  const badge = document.getElementById('heuteBadge');
+  if (isToday) {
+    badge.textContent = 'HEUTE';
+    badge.style.background = '#3db356';
+  } else {
+    badge.textContent = selectedDate.toLocaleDateString('de-DE',{day:'numeric',month:'short'});
+    badge.style.background = '#4f9ff0';
+  }
+
+  // Soll
+  const soll = plan ? plan.soll : 0;
+
+  // Entry laden oder neu erstellen
+  if (!entries[ds]) {
+    entries[ds] = { hours: soll, status:'normal', notes:'' };
+  }
+  const entry = entries[ds];
+  if (entry.status === 'schule') {
+    todayVal = -soll; // Anzeige: −4,2
+  } else {
+    todayVal = entry.hours; // Normal, Krank, Frei: positiver Wert
+  }
+
+  // Teamtag: Button anzeigen/verstecken je nach Plan
+  const teamBtn = document.getElementById('btn-team');
+  if (plan && plan.teamtag) {
+    teamBtn.style.display = 'block';
+  } else {
+    teamBtn.style.display = 'none';
+  }
+
+  updateDisplay(soll);
+  updateStatusBtns(entry.status||'normal');
+  updateTeamBtn(entry.team || false);
+  document.getElementById('notesInput').value = entry.notes||'';
+  updateCalBtn();
+  updateSaldo();
+
+  // Notes: sofort speichern bei Eingabe
+  const ni = document.getElementById('notesInput');
+  ni.oninput = () => {
+    entries[ds].notes = ni.value;
+    scheduleSave();
+  };
+}
+
+function fmtH(val) {
+  const neg = val < 0;
+  const abs = Math.abs(val);
+  // Dezimal direkt anzeigen: 4.2 → "4,2", 7.0 → "7,0"
+  const str = abs.toLocaleString('de-DE', {minimumFractionDigits:1, maximumFractionDigits:2});
+  return (neg ? '−' : '') + str;
+}
+
+function updateDisplay(soll) {
+  const valEl = document.getElementById('hoursVal');
+  valEl.textContent = fmtH(todayVal);
+  valEl.className = 'hours-value'+(todayVal < 0 ? ' negative' : '');
+
+  const sollStr = soll.toLocaleString('de-DE', {minimumFractionDigits:1, maximumFractionDigits:2});
+  document.getElementById('sollLabel').textContent = 'Soll: '+sollStr+'h';
+
+  const ds = fmtDate(selectedDate);
+  const entry = entries[ds] || {};
+  const status = entry.status || 'normal';
+
+  const diff = Math.round((todayVal - soll)*100)/100;
+  const stEl = document.getElementById('sollStatus');
+  if (status === 'schule') {
+    stEl.textContent = '✗ kein Dienst';
+    stEl.className = 'soll-status negative';
+  } else if (diff > 0) {
+    stEl.textContent = '+'+diff.toLocaleString('de-DE')+'h mehr';
+    stEl.className = 'soll-status over';
+  } else if (diff < 0) {
+    stEl.textContent = diff.toLocaleString('de-DE')+'h weniger';
+    stEl.className = 'soll-status under';
+  } else {
+    stEl.textContent = '✓ genau';
+    stEl.className = 'soll-status';
+  }
+
+  const pct = soll > 0 ? Math.max(0, Math.min(100, (Math.abs(todayVal)/soll)*100)) : 0;
+  document.getElementById('progFill').style.width = pct+'%';
+}
+
+// ─── STATUS ──────────────────────────────────────────────
+function setStatus(status) {
+  const ds = fmtDate(selectedDate);
+  const dow = selectedDate.getDay();
+  const soll = PLAN[dow] ? PLAN[dow].soll : 0;
+
+  if (!entries[ds]) entries[ds] = {hours: soll, status:'normal', notes:''};
+
+  entries[ds].status = status;
+
+  if (status === 'schule') {
+    // Keine Schule = Minusstunden → 0h gearbeitet, Saldo = 0 - soll = -soll
+    entries[ds].hours = 0;
+    todayVal = 0;
+  } else if (status === 'krank' || status === 'frei') {
+    // Krank/Frei = neutral, Soll wird angerechnet
+    entries[ds].hours = soll;
+    todayVal = soll;
+  } else {
+    // Normal: wenn vorher 0, auf Soll zurücksetzen
+    if (entries[ds].hours === 0) entries[ds].hours = soll;
+    todayVal = entries[ds].hours;
+  }
+
+  updateDisplay(soll);
+  updateStatusBtns(status);
+  scheduleSave();
+}
+
+function toggleTeam() {
+  const ds = fmtDate(selectedDate);
+  if (!entries[ds]) entries[ds] = {hours: todayVal, status:'normal', notes:'', team:false};
+
+  const wasTeam = entries[ds].team || false;
+  entries[ds].team = !wasTeam;
+
+  // +1h wenn Teamtag aktiviert, -1h wenn deaktiviert
+  todayVal = Math.round((todayVal + (wasTeam ? -1 : +1)) * 100) / 100;
+  entries[ds].hours = todayVal;
+
+  const dow = selectedDate.getDay();
+  const soll = PLAN[dow] ? PLAN[dow].soll : 0;
+  updateDisplay(soll);
+  updateTeamBtn(entries[ds].team);
+  scheduleSave();
+}
+
+let teamVerlaengerungExtra = 0;
+
+function teamVerlaengerung(delta) {
+  const ds = fmtDate(selectedDate);
+  const dow = selectedDate.getDay();
+  const soll = PLAN[dow] ? PLAN[dow].soll : 0;
+
+  // Vorherige Verlängerung rückgängig, neue setzen
+  todayVal = Math.round((todayVal - teamVerlaengerungExtra + delta)*100)/100;
+  teamVerlaengerungExtra = delta;
+
+  if (!entries[ds]) entries[ds] = {hours: soll, status:'normal', notes:''};
+  entries[ds].hours = todayVal;
+  entries[ds].teamExtra = delta;
+
+  // Button markieren
+  [0.25, 0.5, 0.75, 1.0].forEach(v => {
+    const id = 'tv'+(v*60);
+    const b = document.getElementById(id);
+    if (b) b.classList.toggle('selected', v === delta);
+  });
+
+  updateDisplay(soll);
+  scheduleSave();
+}
+
+function updateTeamBtn(isTeam) {
+  const btn = document.getElementById('btn-team');
+  const lbl = document.getElementById('teamLabel');
+  const verl = document.getElementById('teamVerlaengerung');
+  btn.classList.toggle('active', isTeam);
+  lbl.textContent = isTeam ? '✓ aktiv' : '+1h';
+  if (verl) verl.style.display = isTeam ? 'block' : 'none';
+}
+
+function updateStatusBtns(status) {
+  const configs = {
+    normal: 'active',
+    frei:   'active-frei',
+    krank:  'active-krank',
+    schule: 'active-schule'
+  };
+  ['normal','frei','krank','schule'].forEach(s => {
+    const b = document.getElementById('btn-'+s);
+    if (!b) return;
+    b.classList.remove('active','active-frei','active-krank','active-schule');
+    if (status === s) b.classList.add(configs[s]);
+  });
+}
+
+// ─── HOURS ───────────────────────────────────────────────
+function addHours(delta) {
+  const ds = fmtDate(selectedDate);
+  const dow = selectedDate.getDay();
+  const soll = PLAN[dow] ? PLAN[dow].soll : 0;
+
+  todayVal = Math.round((todayVal + delta)*100)/100;
+  if (!entries[ds]) entries[ds] = {hours:soll, status:'normal', notes:''};
+  entries[ds].hours = todayVal;
+
+  updateDisplay(soll);
+  scheduleSave();
+}
+
+function resetToSoll() {
+  const ds = fmtDate(selectedDate);
+  const dow = selectedDate.getDay();
+  const soll = PLAN[dow] ? PLAN[dow].soll : 0;
+  todayVal = soll;
+  if (!entries[ds]) entries[ds] = {hours:soll, status:'normal', notes:''};
+  entries[ds].hours = soll;
+  entries[ds].status = 'normal';
+  entries[ds].team = false;
+  updateDisplay(soll);
+  updateStatusBtns('normal');
+  updateTeamBtn(false);
+  scheduleSave();
+  showToast('↺ Zurückgesetzt');
+}
+
+// ─── SALDO ───────────────────────────────────────────────
+function updateSaldo() {
+  let saldo = userData.startsaldo || 0; // Startsaldo als Basis
+  Object.entries(entries).forEach(([ds, entry]) => {
+    const d = new Date(ds+'T12:00:00');
+    const plan = PLAN[d.getDay()];
+    if (!plan) return;
+    saldo += (entry.hours||0) - plan.soll;
+  });
+  saldo = Math.round(saldo*100)/100;
+  const sign = saldo >= 0 ? '+' : '';
+  const el = document.getElementById('saldoBadge');
+  el.textContent = sign+saldo.toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:2})+'h';
+  el.className = 'badge-bar-value' + (saldo < 0 ? ' neg' : saldo > 0 ? ' pos' : '');
+}
+
+// ─── SAVE ────────────────────────────────────────────────
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 600);
+}
+
+function doSave() {
+  userData.eintraege = entries;
+  localStorage.setItem('stundenzettel_'+userData.name, JSON.stringify(userData));
+  showToast('Gespeichert ✓');
+  updateSaldo();
+}
+
+function manualSave() { doSave(); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+// ─── EINSTELLUNGEN ───────────────────────────────────────
+function openSettings() {
+  document.getElementById('settingsSaldo').value = userData.startsaldo || 0;
+  document.getElementById('settingsWochen').value = userData.wochenstunden || 31;
+  document.getElementById('settingsModal').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('open');
+}
+
+function saveSettings() {
+  const saldo = parseFloat(document.getElementById('settingsSaldo').value) || 0;
+  const wochen = parseFloat(document.getElementById('settingsWochen').value) || userData.wochenstunden;
+  userData.startsaldo = saldo;
+  userData.wochenstunden = wochen;
+  doSave();
+  document.getElementById('weekHours').textContent =
+    wochen.toLocaleString('de-DE') + ' Std. / Woche';
+  closeSettings();
+  showToast('Einstellungen gespeichert ✓');
+  updateSaldo();
+}
+
+function calMainAction() {
+  const isToday = fmtDate(selectedDate) === fmtDate(new Date());
+  if (isToday) {
+    openCalendar();
+  } else {
+    selectedDate = new Date();
+    render();
+  }
+}
+
+function updateCalBtn() {
+  const btn = document.getElementById('btnCalMain');
+  const isToday = fmtDate(selectedDate) === fmtDate(new Date());
+  if (isToday) {
+    btn.textContent = '📅';
+    btn.classList.remove('is-back');
+    btn.title = 'Kalender öffnen';
+  } else {
+    btn.textContent = '↩';
+    btn.classList.add('is-back');
+    btn.title = 'zurück';
+  }
+}
+
+// ─── SPEICHERN-OPTIONEN ──────────────────────────────────
+function openSaveOptions() {
+  document.getElementById('saveModal').classList.add('open');
+}
+function closeSaveModal() {
+  document.getElementById('saveModal').classList.remove('open');
+}
+
+function savePDF() {
+  closeSaveModal();
+  showToast('📄 PDF wird vorbereitet...');
+  setTimeout(() => window.print(), 500);
+}
+
+function saveSnapshot() {
+  const monat = new Date().toLocaleDateString('de-DE',{month:'long',year:'numeric'});
+  const saldo = (() => {
+    let s = parseFloat(userData.startsaldo)||0;
+    Object.entries(entries).forEach(([ds,e]) => {
+      const plan = PLAN[new Date(ds+'T12:00:00').getDay()];
+      if (plan) s += (e.hours||0) - plan.soll;
+    });
+    return Math.round(s*100)/100;
+  })();
+  const snapshots = JSON.parse(localStorage.getItem('snapshots_'+userData.name)||'[]');
+  snapshots.push({
+    monat, saldo, datum: new Date().toISOString(),
+    eintraege: Object.keys(entries).length
+  });
+  localStorage.setItem('snapshots_'+userData.name, JSON.stringify(snapshots));
+  closeSaveModal();
+  showToast('✓ Monatsbericht gespeichert');
+}
+
+// ─── ARCHIV ──────────────────────────────────────────────
+function openArchiv() {
+  const snapshots = JSON.parse(localStorage.getItem('snapshots_'+userData.name)||'[]');
+  const content = document.getElementById('archivContent');
+  if (!snapshots.length) {
+    content.innerHTML = `<div style="text-align:center;color:#ccc;padding:30px;">
+      <div style="font-size:40px;margin-bottom:10px;">📁</div>
+      <div>Noch keine Dokumente gespeichert.</div>
+      <div style="font-size:12px;margin-top:8px;color:#bbb;">Nutze 💾 → Monatsbericht speichern,<br>um Einträge hier abzulegen.</div>
+    </div>`;
+  } else {
+    content.innerHTML = snapshots.slice().reverse().map((s,i) => {
+      const c = s.saldo>=0?'#27ae60':'#d9534f';
+      const bg = s.saldo>=0?'#f0faf3':'#fff1f2';
+      const sign = s.saldo>=0?'+':'';
+      const d = new Date(s.datum).toLocaleDateString('de-DE',{day:'numeric',month:'short',year:'numeric'});
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#fafafa;border:1px solid #eee;border-radius:14px;margin-bottom:8px;">
+        <div>
+          <div style="font-size:14px;font-weight:700;">${s.monat}</div>
+          <div style="font-size:11px;color:#aaa;margin-top:2px;">${s.eintraege} Einträge · gespeichert am ${d}</div>
+        </div>
+        <div style="text-align:right;display:flex;align-items:center;gap:10px;">
+          <div style="font-size:16px;font-weight:800;color:${c};background:${bg};padding:5px 12px;border-radius:10px;">${sign}${s.saldo.toLocaleString('de-DE')}h</div>
+          <button onclick="deleteSnapshot(${snapshots.length-1-i})" style="background:none;border:none;color:#ddd;font-size:18px;cursor:pointer;">🗑</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('archivModal').classList.add('open');
+}
+
+function closeArchiv() {
+  document.getElementById('archivModal').classList.remove('open');
+}
+
+function deleteSnapshot(idx) {
+  const snapshots = JSON.parse(localStorage.getItem('snapshots_'+userData.name)||'[]');
+  snapshots.splice(idx,1);
+  localStorage.setItem('snapshots_'+userData.name, JSON.stringify(snapshots));
+  openArchiv();
+}
+
+function printView() {
+  showToast('🖨️ Drucken...');
+  setTimeout(() => window.print(), 300);
+}
+
+function goHome() {
+  location.href = 'index.html';
+}
+
+function confirmDeleteData() {
+  if (confirm('Wirklich alle Einträge löschen? Der Name und die Einstellungen bleiben erhalten.')) {
+    userData.eintraege = {};
+    entries = {};
+    doSave();
+    closeSettings();
+    render();
+    showToast('Einträge gelöscht ✓');
+  }
+}
+
+// ─── STUNDENPLAN ─────────────────────────────────────────
+function openStundenplan() {
+  const TAGE = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
+  
+  // ─── KOMPAKTE ÜBERSICHT (oben) ───
+  const overviewRows = TAGE.map((tag, idx) => {
+    const day = idx + 1;
+    const plan = PLAN[day] || {};
+    const von = plan.von || '09:00';
+    const bis = plan.bis || '17:00';
+    const std = plan.soll || 8;
+    return `<span style="font-size:11px;padding:4px 8px;background:#f0f0f0;border-radius:6px;white-space:nowrap;">${tag.substring(0,2)}: ${von}–${bis} <b>${std}h</b></span>`;
+  }).join('');
+
+  // ─── SCHULSTUNDENPLAN (neu) ───
+  const stundenplan = [
+    { stunde: '1. Stunde', zeit: '08:05–08:50' },
+    { stunde: '2. Stunde', zeit: '08:50–09:35' },
+    { stunde: 'Pause', zeit: '09:35–10:05', pause: true },
+    { stunde: '3. Stunde', zeit: '10:05–10:50' },
+    { stunde: '4. Stunde', zeit: '10:50–11:35' },
+    { stunde: 'Pause', zeit: '11:35–11:50', pause: true },
+    { stunde: '5. Stunde', zeit: '11:50–12:35' },
+    { stunde: '6. Stunde', zeit: '12:35–13:20' },
+    { stunde: 'Pause', zeit: '13:20–13:30', pause: true },
+    { stunde: '7. Stunde', zeit: '13:30–14:15' },
+    { stunde: '8. Stunde', zeit: '14:15–15:00' },
+    { stunde: '9. Stunde', zeit: '15:00–16:00' }
+  ];
+
+  const selectedDate = new Date();
+  const dayOfWeek = selectedDate.getDay(); // 0=Sonntag, 1=Montag
+  const dayIndex = dayOfWeek === 0 ? 4 : dayOfWeek - 1; // Montag=0
+  const dayName = TAGE[dayIndex] || 'Montag';
+  
+  let stundenplanHTML = '';
+  stundenplan.forEach((s, i) => {
+    const key = `stundenplan_${dayName}_${i}`;
+    const saved = localStorage.getItem(key) || '';
+    if (s.pause) {
+      stundenplanHTML += `
+        <div style="padding:10px 12px;background:#fff3cd;border-radius:8px;margin-bottom:6px;text-align:center;font-size:12px;color:#666;">
+          ☕ ${s.stunde} (${s.zeit})
+        </div>`;
+    } else {
+      stundenplanHTML += `
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+          <div style="flex:0 0 75px;font-size:11px;color:#666;font-weight:600;">${s.zeit}</div>
+          <input type="text" value="${saved}" placeholder="${s.stunde}" 
+            onchange="localStorage.setItem('stundenplan_${dayName}_${i}', this.value)"
+            style="flex:1;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:Poppins,sans-serif;">
+        </div>`;
+    }
+  });
+
+  document.getElementById('stundenplanContent').innerHTML = `
+    <div style="padding:12px;background:#f9f9f9;border-radius:10px;margin-bottom:16px;">
+      <div style="font-size:10px;color:#999;margin-bottom:6px;font-weight:600;">📊 WÖCHENTLICHE ARBEITSZEITEN:</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${overviewRows}
+      </div>
+    </div>
+    
+    <div style="margin-bottom:12px;">
+      <div style="font-size:12px;font-weight:700;color:#3db356;margin-bottom:10px;">📚 PERSÖNLICHER STUNDENPLAN – ${dayName}</div>
+      <div style="font-size:11px;color:#888;margin-bottom:12px;">Trage hier deine Fächer/Aktivitäten ein (z.B. Deutsch, Mathe, Sport):</div>
+      ${stundenplanHTML}
+    </div>`;
+  
+  document.getElementById('stundenplanModal').classList.add('open');
+}
+
+function closeStundenplan() {
+  document.getElementById('stundenplanModal').classList.remove('open');
+}
+
+function saveStundenplan() {
+  const TAGE = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
+  let total = 0;
+  TAGE.forEach((tag, i) => {
+    const dow = i + 1;
+    const von  = document.getElementById(`sp_von_${dow}`)?.value || '08:00';
+    const bis  = document.getElementById(`sp_bis_${dow}`)?.value || '16:00';
+    const soll = parseFloat(document.getElementById(`sp_soll_${dow}`)?.value) || 0;
+    total += soll;
+    if (!userData.schedule) userData.schedule = [];
+    const idx = userData.schedule.findIndex(s => s.day === tag);
+    const entry = { day: tag, von, bis, soll };
+    if (idx >= 0) userData.schedule[idx] = entry;
+    else userData.schedule.push(entry);
+    PLAN[dow] = { von, bis, soll };
+  });
+  userData.wochenstunden = Math.round(total * 10) / 10;
+  document.getElementById('weekHours').textContent = userData.wochenstunden.toLocaleString('de-DE') + ' Std.';
+  doSave();
+  closeStundenplan();
+  showToast('✓ Stundenplan gespeichert');
+}
+
+// ─── VERLAUF ─────────────────────────────────────────────
+function openOverview() {
+  const allEntries = Object.entries(entries).sort((a,b)=>a[0].localeCompare(b[0]));
+  const startsaldo = parseFloat(userData.startsaldo) || 0;
+  const byMonth = {};
+
+  allEntries.forEach(([ds, e]) => {
+    const d = new Date(ds+'T12:00:00');
+    const plan = PLAN[d.getDay()];
+    if (!plan) return;
+    const diff = Math.round(((e.hours||0) - plan.soll)*100)/100;
+    const monat = d.toLocaleDateString('de-DE',{month:'long', year:'numeric'});
+    if (!byMonth[monat]) byMonth[monat] = { tage:[], saldo:0 };
+    byMonth[monat].tage.push({d, e, plan, diff});
+    byMonth[monat].saldo += diff;
+  });
+
+  let jahresSaldo = startsaldo;
+  const jahresListe = [];
+  let eintraegeHTML = '';
+
+  if (Object.keys(byMonth).length) {
+    Object.entries(byMonth).forEach(([monat, data]) => {
+      data.saldo = Math.round(data.saldo*100)/100;
+      jahresSaldo += data.saldo;
+      jahresListe.push({monat, saldo: data.saldo});
+
+      const mc = data.saldo>=0?'#27ae60':'#d9534f';
+      const ms = data.saldo>=0?'+':'';
+      const rows = data.tage.map(({d, e, diff}) => {
+        const dayStr = d.toLocaleDateString('de-DE',{weekday:'short',day:'numeric'});
+        const icons = {normal:'',frei:'⭐',krank:'😷',schule:'🚫'};
+        const bg = {normal:'#fff',frei:'#fffbeb',krank:'#eff6ff',schule:'#fff1f2'}[e.status||'normal'];
+        const dc = diff>0?'#27ae60':diff<0?'#d9534f':'#aaa';
+        const ds = diff>0?'+':'';
+        return `<div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;background:${bg};border-radius:6px;padding:7px 10px;margin-bottom:3px;">
+          <div style="width:44px;font-size:12px;font-weight:700;color:#555;">${dayStr}</div>
+          <div style="flex:1;font-size:12px;color:#888;">${icons[e.status||'normal']} ${e.status==='schule'?'Keine Schule':e.status==='frei'?'Frei':e.status==='krank'?'Krank':''}</div>
+          <div style="font-size:13px;font-weight:700;color:#333;min-width:40px;text-align:right;">${(e.hours||0).toLocaleString('de-DE',{minimumFractionDigits:1})}h</div>
+          <div style="font-size:12px;font-weight:700;color:${dc};min-width:48px;text-align:right;">${ds}${diff.toLocaleString('de-DE')}h</div>
+        </div>`;
+      }).join('');
+
+      eintraegeHTML += `
+        <div style="margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 6px;">
+            <div style="font-size:13px;font-weight:700;color:#3db356;">${monat}</div>
+            <div style="font-size:14px;font-weight:800;color:${mc};background:${data.saldo>=0?'#f0faf3':'#fff1f2'};padding:4px 12px;border-radius:20px;">${ms}${data.saldo.toLocaleString('de-DE')}h</div>
+          </div>
+          <div style="background:#fafafa;border-radius:12px;padding:6px 8px;">
+            <div style="display:flex;font-size:10px;color:#bbb;padding:4px 10px;letter-spacing:0.5px;">
+              <div style="width:44px;">TAG</div>
+              <div style="flex:1;">STATUS</div>
+              <div style="min-width:40px;text-align:right;">IST</div>
+              <div style="min-width:48px;text-align:right;">DIFF</div>
+            </div>
+            ${rows}
+          </div>
+        </div>`;
+    });
+  } else {
+    eintraegeHTML = `<div style="text-align:center;color:#ccc;padding:30px;font-size:14px;">Noch keine Einträge</div>`;
+  }
+
+  jahresSaldo = Math.round(jahresSaldo*100)/100;
+  const jc = jahresSaldo>=0?'#27ae60':'#d9534f';
+  const js = jahresSaldo>=0?'+':'';
+
+  const jahresRows = [
+    ...(startsaldo!==0?[`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e8f4fd;">
+      <span style="font-size:13px;color:#4f9ff0;font-weight:600;">📌 Startsaldo / Übertrag</span>
+      <span style="font-weight:700;color:${startsaldo>=0?'#3db356':'#d9534f'};">${startsaldo>=0?'+':''}${startsaldo.toLocaleString('de-DE')}h</span>
+    </div>`]:[]),
+    ...jahresListe.map(({monat, saldo}) => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f5f5;">
+      <span style="font-size:13px;color:#555;">${monat}</span>
+      <span style="font-weight:700;color:${saldo>=0?'#3db356':'#d9534f'};">${saldo>=0?'+':''}${saldo.toLocaleString('de-DE')}h</span>
+    </div>`)
+  ].join('');
+
+  document.getElementById('overviewContent').innerHTML = `
+    <div style="padding:0 0 16px;">
+      <!-- Jahresübersicht oben -->
+      <div style="background:linear-gradient(135deg,#0d2b14,#2a7a3b);border-radius:16px;padding:16px;margin-bottom:16px;color:white;">
+        <div style="font-size:10px;letter-spacing:2px;opacity:0.7;margin-bottom:8px;">GESAMTSALDO</div>
+        <div style="font-size:36px;font-weight:800;color:${jc};">${js}${jahresSaldo.toLocaleString('de-DE')}h</div>
+        <div style="font-size:12px;opacity:0.6;margin-top:4px;">${userData.wochenstunden} Std./Woche · ${allEntries.length} Einträge</div>
+      </div>
+      <!-- Jahresübersicht Tabelle -->
+      ${jahresListe.length ? `<div style="background:white;border-radius:14px;padding:12px 14px;border:1.5px solid #eee;margin-bottom:16px;">
+        <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">Jahresübersicht</div>
+        ${jahresRows}
+        <div style="display:flex;justify-content:space-between;padding:10px 0 0;margin-top:4px;border-top:2px solid #eee;">
+          <span style="font-size:14px;font-weight:800;">Gesamt</span>
+          <span style="font-size:16px;font-weight:800;color:${jc};">${js}${jahresSaldo.toLocaleString('de-DE')}h</span>
+        </div>
+      </div>` : ''}
+      <!-- Monatsdetails -->
+      <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;">Alle Einträge</div>
+      ${eintraegeHTML}
+    </div>`;
+
+  document.getElementById('overviewModal').classList.add('open');
+}
+
+function closeOverview() {
+  document.getElementById('overviewModal').classList.remove('open');
+}
+
+
+function addTermin() {
+  showToast('📅 Termin-Funktion kommt bald...');
+}
+
+function renderNextAppointment() {
+  // Kasten immer sichtbar – zeigt "Kein Termin" wenn nichts da
+  document.getElementById('nextCard').style.display = 'block';
+  // Termine aus userData laden falls vorhanden
+  const termine = userData.termine || [];
+  const today = new Date(); today.setHours(0,0,0,0);
+  const next = termine
+    .map(t => ({...t, d: new Date(t.datum)}))
+    .filter(t => t.d >= today)
+    .sort((a,b) => a.d - b.d)[0];
+
+  if (next) {
+    const diffDays = Math.round((next.d - today) / 86400000);
+    const dayStr = next.d.toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'short'});
+    document.getElementById('nextDate').textContent = dayStr;
+    document.getElementById('nextDate').style.color = '#86efac';
+    document.getElementById('nextIcon').textContent = next.icon || '📅';
+    document.getElementById('nextName').textContent = next.name;
+    document.getElementById('nextName').style.color = 'white';
+    const badge = document.getElementById('nextCountdown');
+    badge.textContent = diffDays === 0 ? 'Heute' : diffDays === 1 ? 'Morgen' : `in ${diffDays} Tagen`;
+    badge.style.display = 'inline-block';
+    document.getElementById('nextDrawerName').textContent = (next.icon||'📅')+' '+next.name;
+    document.getElementById('nextDrawerDate').textContent = next.d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    document.getElementById('nextDrawerBadge').textContent = badge.textContent;
+  } else {
+    document.getElementById('nextDate').textContent = '';
+    document.getElementById('nextIcon').textContent = '📅';
+    document.getElementById('nextName').textContent = 'Kein Termin';
+    document.getElementById('nextName').style.color = 'rgba(255,255,255,0.4)';
+    document.getElementById('nextCountdown').style.display = 'none';
+  }
+}
+
+function addTermin() {
+  const name = prompt('Terminname (z.B. 🎂 Annika):');
+  if (!name) return;
+  const datum = prompt('Datum (TT.MM.JJJJ):');
+  if (!datum) return;
+  const parts = datum.split('.');
+  if (parts.length !== 3) { showToast('❌ Ungültiges Datum'); return; }
+  const d = new Date(+parts[2], +parts[1]-1, +parts[0]);
+  if (isNaN(d)) { showToast('❌ Ungültiges Datum'); return; }
+  if (!userData.termine) userData.termine = [];
+  // Icon aus erstem Emoji extrahieren falls vorhanden
+  const match = name.match(/^\p{Emoji}/u);
+  const icon = match ? match[0] : '📅';
+  const cleanName = name.replace(/^\p{Emoji}\s*/u,'');
+  userData.termine.push({ name: cleanName, icon, datum: d.toISOString().split('T')[0] });
+  doSave();
+  renderNextAppointment();
+  showToast('✓ Termin gespeichert');
+}
+
+// ─── CALENDAR ────────────────────────────────────────────
+function openCalendar() {
+  calDate = new Date(selectedDate);
+  renderCal();
+  document.getElementById('calModal').classList.add('open');
+
+}
+
+function closeCalendar() {
+  document.getElementById('calModal').classList.remove('open');
+}
+
+function goToToday() {
+  selectedDate = new Date();
+  closeCalendar();
+  render();
+}
+
+function prevMonth() { calDate.setMonth(calDate.getMonth()-1); renderCal(); }
+function nextMonth() { calDate.setMonth(calDate.getMonth()+1); renderCal(); }
+
+function renderCal() {
+  const y = calDate.getFullYear(), m = calDate.getMonth();
+  document.getElementById('monthName').textContent =
+    calDate.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
+
+  const first = new Date(y,m,1);
+  const offset = (first.getDay()||7)-1;
+  const monday = new Date(first);
+  monday.setDate(1-offset);
+
+  let html='';
+  for(let week=0;week<6;week++){
+    for(let wd=0;wd<5;wd++){
+      const d = new Date(monday);
+      d.setDate(monday.getDate()+week*7+wd);
+      const ds = fmtDate(d);
+      const isThisMonth = d.getMonth()===m;
+      const isTodayCal = ds===fmtDate(new Date());
+      const isSel = ds===fmtDate(selectedDate);
+      const entry = entries[ds];
+      const status = entry ? (entry.status||'normal') : null;
+
+      // Stunden-Anzeige
+      let stundenLabel = '';
+      if (entry && status) {
+        const dow = d.getDay();
+        const plan = PLAN[dow];
+        const soll = plan ? plan.soll : 0;
+        const diff = Math.round(((entry.hours||0) - soll)*100)/100;
+        if (status === 'schule') {
+          stundenLabel = `<div class="cal-stunden">🚫</div>`;
+        } else if (status === 'frei') {
+          stundenLabel = `<div class="cal-stunden">⭐</div>`;
+        } else if (status === 'krank') {
+          stundenLabel = `<div class="cal-stunden">😷</div>`;
+        } else {
+          const sign = diff >= 0 ? '+' : '';
+          stundenLabel = `<div class="cal-stunden">${sign}${diff.toLocaleString('de-DE')}h</div>`;
+        }
+      }
+
+      const statusClass = status && !isTodayCal ? `status-${status}` : '';
+
+      html += `<div class="cal-day
+        ${!isThisMonth?'other-month':''}
+        ${isTodayCal?'is-today':''}
+        ${isSel?'is-selected':''}
+        ${statusClass}"
+        onclick="pickDate(${d.getFullYear()},${d.getMonth()},${d.getDate()})">
+        ${d.getDate()}
+        ${stundenLabel}
+      </div>`;
+    }
+  }
+  document.getElementById('calGrid').innerHTML=html;
+}
+
+function pickDate(y,m,day) {
+  selectedDate = new Date(y,m,day);
+  closeCalendar();
+  render();
+  updateCalBtn();
+}
+
+// ─── SHARE ───────────────────────────────────────────────
+function shareJanine() {
+  const ds = fmtDate(selectedDate);
+  const e = entries[ds]||{hours:0,status:'normal',notes:''};
+  const text = `Stundenzettel ${ds}\nStunden: ${e.hours}h\nStatus: ${e.status}\nBemerkung: ${e.notes||'–'}`;
+  if(navigator.share) navigator.share({title:'Stundenzettel',text});
+  else { navigator.clipboard.writeText(text); showToast('Kopiert ✓'); }
+}
+
+function shareNative() {
+  shareJanine();
+}
+</script>
+</body>
+</html>
