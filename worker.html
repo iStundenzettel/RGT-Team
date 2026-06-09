@@ -62,9 +62,10 @@ body {
 }
 .date-selected-badge {
   background:#4f9ff0; color:white;
-  padding:8px 16px; border-radius:20px;
-  font-size:14px; font-weight:700;
+  padding:10px 20px; border-radius:20px;
+  font-size:16px; font-weight:800;
   cursor:pointer;
+  box-shadow: 0 4px 12px rgba(79,159,240,0.4);
 }
 .card-date-right { text-align:right; }
 .card-date-right .day { font-size:17px; font-weight:700; color:#222; }
@@ -287,7 +288,7 @@ body {
   <div class="header-card">
     <div class="header-school">RGT · Arnold-Janssen-Schule · Goch</div>
     <div class="header-sub">STUNDENZETTEL</div>
-    <div class="header-name" id="userName">Marc Hoss</div>
+    <div class="header-name" id="userName">Marc Hoß</div>
     <div class="header-org"></div>
     <div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center;">
       <div class="badge-bar-item">
@@ -528,24 +529,24 @@ body {
 </div>
 
 <!-- KALENDER MODAL -->
-<div class="modal" id="calModal" style="background:rgba(10,30,80,0.92);">
-  <div class="modal-box" style="background:linear-gradient(180deg,#1a3a6b 0%,#f0f6ff 120px);">
+<div class="modal" id="calModal">
+  <div class="modal-box">
     <div class="modal-top">
       <div style="width:32px;"></div>
-      <div class="modal-title" style="color:#fff;">📅 Kalender</div>
-      <button class="btn-close" onclick="closeCalendar()" style="background:rgba(255,255,255,0.2);color:#fff;">✕</button>
+      <div class="modal-title" style="color:#4f9ff0;">📅 Kalender</div>
+      <button class="btn-close" onclick="closeCalendar()">✕</button>
     </div>
     <div class="month-nav">
-      <button class="month-nav-btn" onclick="prevMonth()" style="color:#fff;background:rgba(255,255,255,0.15);">‹</button>
-      <div class="month-name" id="monthName" style="color:#fff;">Juni 2026</div>
-      <button class="month-nav-btn" onclick="nextMonth()" style="color:#fff;background:rgba(255,255,255,0.15);">›</button>
+      <button class="month-nav-btn" onclick="prevMonth()">‹</button>
+      <div class="month-name" id="monthName">Juni 2026</div>
+      <button class="month-nav-btn" onclick="nextMonth()">›</button>
     </div>
     <div class="cal-headers">
-      <div class="cal-hd" style="color:rgba(255,255,255,0.7);">Mo</div>
-      <div class="cal-hd" style="color:rgba(255,255,255,0.7);">Di</div>
-      <div class="cal-hd" style="color:rgba(255,255,255,0.7);">Mi</div>
-      <div class="cal-hd" style="color:rgba(255,255,255,0.7);">Do</div>
-      <div class="cal-hd" style="color:rgba(255,255,255,0.7);">Fr</div>
+      <div class="cal-hd">Mo</div>
+      <div class="cal-hd">Di</div>
+      <div class="cal-hd">Mi</div>
+      <div class="cal-hd">Do</div>
+      <div class="cal-hd">Fr</div>
     </div>
     <div class="cal-grid" id="calGrid"></div>
 
@@ -691,10 +692,12 @@ function render() {
   const badge = document.getElementById('heuteBadge');
   if (isToday) {
     badge.textContent = 'HEUTE';
+    badge.className = 'heute-badge';
     badge.style.background = '#3db356';
+    badge.style.boxShadow = '';
   } else {
-    badge.textContent = selectedDate.toLocaleDateString('de-DE',{day:'numeric',month:'short'});
-    badge.style.background = '#4f9ff0';
+    badge.textContent = selectedDate.toLocaleDateString('de-DE',{day:'numeric',month:'long'});
+    badge.className = 'date-selected-badge';
   }
 
   // Soll
@@ -1163,7 +1166,7 @@ function openStundenplan() {
 
   document.getElementById('stundenplanContent').innerHTML = `
     <div style="margin-bottom:16px;">
-      <div style="font-size:10px;color:#999;margin-bottom:8px;font-weight:600;">📝 ARBEITSZEITEN EDITIEREN:</div>
+      <div style="font-size:10px;color:#999;margin-bottom:8px;font-weight:600;">✏️ Meine Arbeitszeiten:</div>
       ${overviewRows}
     </div>
     
