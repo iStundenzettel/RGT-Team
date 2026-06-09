@@ -542,13 +542,10 @@ body {
     <div class="modal-top">
       <div style="width:32px;"></div>
       <div class="modal-title">📋 Mein Stundenplan</div>
-      <button class="btn-close" onclick="closeStundenplan()">✕</button>
+      <button class="btn-close" onclick="closeStundenplan()" style="background:#d9534f;color:white;">✕</button>
     </div>
     <div id="stundenplanContent" style="overflow-y:auto; flex:1;"></div>
-    <div style="display:flex;gap:8px;">
-      <button onclick="closeStundenplan()" style="flex:1;padding:13px;background:transparent;color:#aaa;border:1.5px solid #e0e0e0;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">✕ Abbrechen</button>
-      <button class="btn-heute" onclick="saveStundenplan()" style="flex:2;">✓ Speichern</button>
-    </div>
+    <button class="btn-heute" onclick="saveStundenplan()">✓ Speichern</button>
   </div>
 </div>
 
@@ -575,14 +572,8 @@ body {
     <div class="cal-grid" id="calGrid"></div>
 
     <div style="display:flex;gap:8px;margin:8px 4px 0;">
-      <button onclick="closeCalendar()" style="
-        flex:1;padding:11px;background:transparent;
-        color:#aaa;border:1.5px solid #e0e0e0;border-radius:12px;
-        font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">
-        ✕ Schließen
-      </button>
       <button onclick="goToToday()" style="
-        flex:2;padding:11px;background:#d9534f;
+        flex:1;padding:11px;background:#d9534f;
         color:white;border:none;border-radius:12px;
         font-size:13px;font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;
         box-shadow:0 3px 10px rgba(217,83,79,0.35);">
@@ -1027,6 +1018,47 @@ function updateCalBtn() {
 function openSaveOptions() {
   document.getElementById('saveModal').classList.add('open');
 }
+function exportDaten() {
+  const data = {
+    version: 1,
+    exportDatum: new Date().toISOString(),
+    userData: userData,
+    snapshots: JSON.parse(localStorage.getItem('snapshots_'+userData.name)||'[]')
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const name = userData.displayName || userData.name;
+  a.href = url;
+  a.download = `stundenzettel_${name}_${new Date().toLocaleDateString('de-DE').replace(/\./g,'-')}.json`;
+  a.click();
+  closeSaveModal();
+  showToast('📤 Daten exportiert ✓');
+}
+
+function importDaten(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.userData) { showToast('❌ Ungültige Datei'); return; }
+      if (!confirm(`Daten von "${data.userData.displayName || data.userData.name}" importieren? Bestehende Daten werden überschrieben!`)) return;
+      localStorage.setItem('stundenzettel_'+data.userData.name, JSON.stringify(data.userData));
+      if (data.snapshots) localStorage.setItem('snapshots_'+data.userData.name, JSON.stringify(data.snapshots));
+      localStorage.setItem('last_stundenzettel_user', data.userData.name);
+      showToast('📥 Daten importiert ✓');
+      closeSaveModal();
+      setTimeout(() => location.reload(), 1000);
+    } catch(err) {
+      showToast('❌ Fehler beim Importieren');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
 function closeSaveModal() {
   document.getElementById('saveModal').classList.remove('open');
 }
