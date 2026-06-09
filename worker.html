@@ -61,11 +61,11 @@ body {
   font-size:12px; font-weight:700; letter-spacing:1px;
 }
 .date-selected-badge {
-  background:#4f9ff0; color:white;
+  background:#d9534f; color:white;
   padding:10px 20px; border-radius:20px;
   font-size:16px; font-weight:800;
   cursor:pointer;
-  box-shadow: 0 4px 12px rgba(79,159,240,0.4);
+  box-shadow: 0 4px 12px rgba(217,83,79,0.4);
 }
 .card-date-right { text-align:right; }
 .card-date-right .day { font-size:17px; font-weight:700; color:#222; }
@@ -616,6 +616,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
   renderNextAppointment();
   render();
+
+  // Annika Geburtstag einmalig eintragen falls noch nicht vorhanden
+  if (!userData.termine) userData.termine = [];
+  const annikaExists = userData.termine.some(t => t.name === 'Annika' && t.datum && t.datum.includes('-06-11'));
+  if (!annikaExists) {
+    userData.termine.push({ name: 'Annika', icon: '🎂', datum: '2026-06-11' });
+    doSave();
+    renderNextAppointment();
+  }
 
   // ─── ERST-START HINWEIS ───
   const hinweisKey = 'hinweis_gezeigt_' + name;
