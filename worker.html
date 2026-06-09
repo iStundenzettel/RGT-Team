@@ -441,6 +441,13 @@ body {
       font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;">
       🗑 Alle meine Einträge löschen
     </button>
+
+    <button onclick="confirmDeleteAccount()" style="
+      width:100%;padding:13px;background:#fff0f0;color:#b91c1c;
+      border:2px solid #f87171;border-radius:12px;font-size:14px;
+      font-weight:700;cursor:pointer;font-family:'Poppins',sans-serif;margin-top:4px;">
+      ⚠️ Komplettes Konto löschen
+    </button>
   </div>
 </div>
 
@@ -1036,6 +1043,18 @@ function confirmDeleteData() {
     closeSettings();
     render();
     showToast('Einträge gelöscht ✓');
+  }
+}
+
+function confirmDeleteAccount() {
+  if (confirm('⚠️ Wirklich das komplette Konto löschen? Alle Daten, Einträge und die Anmeldung werden gelöscht. Das kann nicht rückgängig gemacht werden!')) {
+    const name = userData.name;
+    localStorage.removeItem('stundenzettel_' + name);
+    localStorage.removeItem('snapshots_' + name);
+    localStorage.removeItem('last_stundenzettel_user');
+    // Alle stundenplan_ Keys löschen
+    Object.keys(localStorage).filter(k => k.startsWith('stundenplan_')).forEach(k => localStorage.removeItem(k));
+    window.location.href = 'index.html';
   }
 }
 
