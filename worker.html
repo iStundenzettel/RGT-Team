@@ -528,24 +528,24 @@ body {
 </div>
 
 <!-- KALENDER MODAL -->
-<div class="modal" id="calModal" style="background:rgba(30,60,120,0.7);">
-  <div class="modal-box" style="background:#f0f6ff;">
+<div class="modal" id="calModal" style="background:rgba(10,30,80,0.92);">
+  <div class="modal-box" style="background:linear-gradient(180deg,#1a3a6b 0%,#f0f6ff 120px);">
     <div class="modal-top">
       <div style="width:32px;"></div>
-      <div class="modal-title" style="color:#4f9ff0;">Kalender</div>
-      <button class="btn-close" onclick="closeCalendar()">✕</button>
+      <div class="modal-title" style="color:#fff;">📅 Kalender</div>
+      <button class="btn-close" onclick="closeCalendar()" style="background:rgba(255,255,255,0.2);color:#fff;">✕</button>
     </div>
     <div class="month-nav">
-      <button class="month-nav-btn" onclick="prevMonth()">‹</button>
-      <div class="month-name" id="monthName">Juni 2026</div>
-      <button class="month-nav-btn" onclick="nextMonth()">›</button>
+      <button class="month-nav-btn" onclick="prevMonth()" style="color:#fff;background:rgba(255,255,255,0.15);">‹</button>
+      <div class="month-name" id="monthName" style="color:#fff;">Juni 2026</div>
+      <button class="month-nav-btn" onclick="nextMonth()" style="color:#fff;background:rgba(255,255,255,0.15);">›</button>
     </div>
     <div class="cal-headers">
-      <div class="cal-hd">Mo</div>
-      <div class="cal-hd">Di</div>
-      <div class="cal-hd">Mi</div>
-      <div class="cal-hd">Do</div>
-      <div class="cal-hd">Fr</div>
+      <div class="cal-hd" style="color:rgba(255,255,255,0.7);">Mo</div>
+      <div class="cal-hd" style="color:rgba(255,255,255,0.7);">Di</div>
+      <div class="cal-hd" style="color:rgba(255,255,255,0.7);">Mi</div>
+      <div class="cal-hd" style="color:rgba(255,255,255,0.7);">Do</div>
+      <div class="cal-hd" style="color:rgba(255,255,255,0.7);">Fr</div>
     </div>
     <div class="cal-grid" id="calGrid"></div>
 
