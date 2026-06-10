@@ -280,6 +280,14 @@ body {
   display:flex; align-items:center; justify-content:center;
   gap:8px; width:calc(100% - 8px); flex-shrink:0;
 }
+/* DRUCKANSICHT */
+#printArea { display:none; }
+@media print {
+  body > *:not(#printArea) { display:none !important; }
+  #printArea { display:block !important; }
+  body { background:white !important; padding:0 !important; margin:0 !important; }
+  @page { size:A4 portrait; margin:12mm; }
+}
 </style>
 </head>
 <body>
@@ -397,6 +405,8 @@ body {
     <span>💾</span><span style="font-size:9px;font-weight:600;">Sichern</span>
   </button>
 </div>
+
+<div id="printArea"></div>
 
 <div class="toast" id="toast">Gespeichert ✓</div>
 
@@ -1166,7 +1176,7 @@ function openMonatsVorschau() {
           border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;">
           ✕ Schließen
         </button>
-        <button onclick="window.print();" style="
+        <button onclick="this.closest('div[style*=fixed]').remove(); printTabelle();" style="
           flex:2;padding:12px;background:#0d2b14;color:white;border:none;
           border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:Poppins,sans-serif;">
           🖨️ Drucken / PDF
@@ -1345,7 +1355,173 @@ function deleteSnapshot(idx) {
 }
 
 function printView() {
+  printAWO();
+}
+
+// ─── AWO-FORMULAR DRUCKEN ────────────────────────────────
+function printAWO() {
+  const jetzt = new Date();
+  const monat = jetzt.getMonth() + 1;
+  const jahr = jetzt.getFullYear();
+  const name = userData.displayName || userData.name;
+  const monatName = jetzt.toLocaleDateString('de-DE', {month:'long', year:'numeric'});
+  const STATUS_LABEL = { frei:'Frei', krank:'Krank', schule:'Keine Schule' };
+
+  // Einträge nach Wochen gruppieren
+  const TAGE_IM_MONAT = new Date(jahr, monat, 0).getDate();
+  const wochen = [];
+  let aktuelleWoche = [];
+  for (let d = 1; d <= TAGE_IM_MONAT; d++) {
+    const datum = new Date(jahr, monat-1, d);
+    const dow = datum.getDay();
+    if (dow === 0 || dow === 6) continue;
+    const ds = `${jahr}-${String(monat).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const plan = PLAN[dow] || {};
+    aktuelleWoche.push({ d, dow, ds, plan, eintrag: entries[ds] });
+    if (dow === 5) { wochen.push(aktuelleWoche); aktuelleWoche = []; }
+  }
+  if (aktuelleWoche.length) wochen.push(aktuelleWoche);
+
+  let gesamtDiff = 0;
+  const zellStil = 'border:1px solid #000;padding:4px 6px;font-size:11px;';
+
+  let zeilen = '';
+  wochen.forEach(woche => {
+    let wSoll = 0, wIst = 0;
+    woche.forEach(({d, dow, plan, eintrag}) => {
+      const soll = plan.soll || 0;
+      let arbeitszeit = '', pause = '', stunden = '', begruendung = '';
+      if (eintrag) {
+        const ist = eintrag.hours || 0;
+        wSoll += soll; wIst += ist;
+        if (eintrag.status && eintrag.status !== 'normal') {
+          arbeitszeit = STATUS_LABEL[eintrag.status] || '';
+          stunden = ist > 0 ? ist.toLocaleString('de-DE') : '';
+        } else {
+          arbeitszeit = (plan.von||'') + ' – ' + (plan.bis||'');
+          // Pause prüfen (09:35–10:05)
+          const [vH,vM] = (plan.von||'0:0').split(':').map(Number);
+          const [bH,bM] = (plan.bis||'0:0').split(':').map(Number);
+          if (vH*60+vM < 605 && bH*60+bM > 575) pause = '0:30';
+          stunden = ist.toLocaleString('de-DE');
+        }
+        begruendung = eintrag.notes || '';
+      }
+      zeilen += `<tr>
+        <td style="${zellStil}">${String(d).padStart(2,'0')}.${String(monat).padStart(2,'0')}.</td>
+        <td style="${zellStil}">${arbeitszeit}</td>
+        <td style="${zellStil};text-align:center;">${pause}</td>
+        <td style="${zellStil};text-align:center;">${stunden}</td>
+        <td style="${zellStil}">${begruendung}</td>
+      </tr>`;
+    });
+    const wDiff = wIst - wSoll;
+    gesamtDiff += wDiff;
+    const sign = wDiff >= 0 ? '+' : '';
+    zeilen += `<tr style="background:#f0f0f0;">
+      <td colspan="5" style="${zellStil};font-weight:bold;font-size:10px;">
+        Gesamt SOLL Woche: ${wSoll.toLocaleString('de-DE')}h &nbsp;·&nbsp;
+        Gesamt IST Woche: ${wIst.toLocaleString('de-DE')}h &nbsp;·&nbsp;
+        +/−Stunden: ${sign}${wDiff.toLocaleString('de-DE')}h
+      </td>
+    </tr>`;
+  });
+
+  const startsaldo = parseFloat(userData.startsaldo) || 0;
+  const neuerSaldo = startsaldo + gesamtDiff;
+  const gSign = gesamtDiff >= 0 ? '+' : '';
+  const nSign = neuerSaldo >= 0 ? '+' : '';
+
+  document.getElementById('printArea').innerHTML = `
+    <div style="font-family:Arial,sans-serif;color:#000;max-width:190mm;">
+      <div style="text-align:right;font-size:20px;font-weight:bold;margin-bottom:8px;">AWO</div>
+      <div style="border:1px solid #000;padding:5px 8px;font-size:12px;margin-bottom:10px;">
+        <b>OGS</b> &nbsp; Arnold-Janssen-Schule · Goch
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+        <span><b>Name:</b> ${name}</span>
+        <span><b>Monat:</b> ${monatName}</span>
+        <span><b>Wochenstunden:</b> ${userData.wochenstunden}</span>
+      </div>
+      <div style="font-size:12px;margin-bottom:12px;">
+        <b>Übertrag Mehr-/Minderarbeitsstunden:</b> ${startsaldo.toLocaleString('de-DE')}h
+      </div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#e8e8e8;">
+            <th style="${zellStil};text-align:left;width:14%;">Datum</th>
+            <th style="${zellStil};text-align:left;width:24%;">Arbeitszeit</th>
+            <th style="${zellStil};width:10%;">Pause</th>
+            <th style="${zellStil};width:12%;">Stunden</th>
+            <th style="${zellStil};text-align:left;">Begründung<br>Mehr-/Minderarbeit</th>
+          </tr>
+        </thead>
+        <tbody>${zeilen}</tbody>
+      </table>
+      <div style="text-align:right;font-size:12px;margin-top:12px;">
+        <div><b>Gesamt Monat +/−Stunden:</b> ${gSign}${gesamtDiff.toLocaleString('de-DE')}h</div>
+        <div style="margin-top:4px;"><b>Mehr-/Minderarbeitsstunden neu:</b> ${nSign}${neuerSaldo.toLocaleString('de-DE')}h</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:50px;font-size:11px;">
+        <div style="border-top:1px solid #000;padding-top:4px;width:42%;">Datum, Unterschrift Mitarbeiter*in</div>
+        <div style="border-top:1px solid #000;padding-top:4px;width:42%;">Datum, Unterschrift Koordinator*in</div>
+      </div>
+    </div>`;
   showToast('🖨️ Drucken...');
+  setTimeout(() => window.print(), 300);
+}
+
+// ─── MONATSÜBERSICHT S/W DRUCKEN ─────────────────────────
+function printTabelle() {
+  const jetzt = new Date();
+  const monat = jetzt.getMonth() + 1;
+  const jahr = jetzt.getFullYear();
+  const name = userData.displayName || userData.name;
+  const monatName = jetzt.toLocaleDateString('de-DE', {month:'long', year:'numeric'});
+  const eintraege = getMonatsEintraege(monat, jahr);
+  const STATUS_LABEL = { normal:'Normal', frei:'Frei', krank:'Krank', schule:'Keine Schule' };
+  const zellStil = 'border:1px solid #000;padding:5px 8px;font-size:12px;';
+
+  let gesamtIst = 0, gesamtSoll = 0;
+  const zeilen = eintraege.map(({tag, eintrag, soll}) => {
+    const ist = eintrag.hours || 0;
+    const diff = ist - soll;
+    const sign = diff >= 0 ? '+' : '';
+    gesamtIst += ist; gesamtSoll += soll;
+    const status = STATUS_LABEL[eintrag.status||'normal'];
+    const notiz = eintrag.notes ? ' – '+eintrag.notes : '';
+    return `<tr>
+      <td style="${zellStil}">${tag}</td>
+      <td style="${zellStil}">${status}${notiz}</td>
+      <td style="${zellStil};text-align:right;">${ist.toLocaleString('de-DE')}h</td>
+      <td style="${zellStil};text-align:right;">${sign}${diff.toLocaleString('de-DE')}h</td>
+    </tr>`;
+  }).join('');
+
+  const gesamtDiff = gesamtIst - gesamtSoll;
+  const gSign = gesamtDiff >= 0 ? '+' : '';
+
+  document.getElementById('printArea').innerHTML = `
+    <div style="font-family:Arial,sans-serif;color:#000;max-width:190mm;">
+      <h2 style="margin-bottom:2px;">Stundenzettel – ${name}</h2>
+      <div style="font-size:13px;margin-bottom:14px;">${monatName} · Wochenstunden: ${userData.wochenstunden}</div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#e8e8e8;">
+            <th style="${zellStil};text-align:left;">Tag</th>
+            <th style="${zellStil};text-align:left;">Status</th>
+            <th style="${zellStil};text-align:right;">Ist</th>
+            <th style="${zellStil};text-align:right;">Diff</th>
+          </tr>
+        </thead>
+        <tbody>${zeilen}</tbody>
+      </table>
+      <div style="font-size:13px;margin-top:12px;">
+        <b>Gesamt:</b> ${gesamtIst.toLocaleString('de-DE')}h (Soll: ${gesamtSoll.toLocaleString('de-DE')}h)
+        &nbsp;·&nbsp; <b>Saldo Monat:</b> ${gSign}${gesamtDiff.toLocaleString('de-DE')}h
+        &nbsp;·&nbsp; <b>Startsaldo:</b> ${userData.startsaldo||0}h
+      </div>
+    </div>`;
   setTimeout(() => window.print(), 300);
 }
 
