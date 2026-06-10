@@ -478,48 +478,52 @@ body {
 <!-- SPEICHERN-OPTIONEN MODAL -->
 <!-- BERICHT MODAL -->
 <div class="modal" id="berichtModal">
-  <div class="modal-box">
-    <div class="modal-top">
-      <div style="width:32px;"></div>
-      <div class="modal-title">📄 Bericht</div>
-      <button class="btn-close" onclick="closeBericht()">✕</button>
+  <div class="modal-box" style="padding:0;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#0d2b14,#1d5429);padding:22px 18px 18px;position:relative;">
+      <button class="btn-close" onclick="closeBericht()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.15);color:white;">✕</button>
+      <div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.5);margin-bottom:2px;">SCHWARZ AUF WEISS</div>
+      <div style="font-size:24px;font-weight:800;color:white;">📄 Bericht</div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0 8px;overflow-y:auto;">
+    <div style="display:flex;flex-direction:column;gap:8px;padding:16px 14px;overflow-y:auto;">
 
       <button onclick="closeBericht(); openMonatsVorschau();" style="
-        padding:18px 16px;background:#f0faf3;border:2px solid #3db356;
-        border-radius:14px;font-size:14px;font-weight:600;color:#27ae60;
-        cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;display:flex;align-items:center;gap:14px;">
-        <span style="font-size:28px;">📋</span>
-        <div><div style="font-weight:700;font-size:15px;">Monatsübersicht ansehen</div>
-        <div style="font-size:12px;color:#888;margin-top:2px;">Tabelle mit allen Einträgen.<br>Von dort: Drucken oder als PDF speichern.</div></div>
+        padding:16px;background:linear-gradient(135deg,#f0faf3,#e0f5e8);border:none;
+        border-radius:16px;cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;
+        display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(61,179,86,0.12);">
+        <span style="font-size:26px;">📋</span>
+        <div style="flex:1;"><div style="font-weight:700;font-size:15px;color:#1d5429;">Monatsübersicht ansehen</div>
+        <div style="font-size:12px;color:#6b8f76;margin-top:2px;">Tabelle ansehen, drucken oder als PDF</div></div>
+        <span style="font-size:18px;color:#3db356;">›</span>
       </button>
 
       <button onclick="closeBericht(); printView();" style="
-        padding:18px 16px;background:#f0f7ff;border:1.5px solid #c0d8f0;
-        border-radius:14px;font-size:14px;font-weight:600;color:#357abd;
-        cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;display:flex;align-items:center;gap:14px;">
-        <span style="font-size:28px;">🖨️</span>
-        <div><div style="font-weight:700;font-size:15px;">AWO-Stundenzettel drucken</div>
-        <div style="font-size:12px;color:#888;margin-top:2px;">Sieht aus wie das Papier-Formular (DIN A4)</div></div>
+        padding:16px;background:linear-gradient(135deg,#f0faf3,#e0f5e8);border:none;
+        border-radius:16px;cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;
+        display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(61,179,86,0.12);">
+        <span style="font-size:26px;">🖨️</span>
+        <div style="flex:1;"><div style="font-weight:700;font-size:15px;color:#1d5429;">AWO-Stundenzettel drucken</div>
+        <div style="font-size:12px;color:#6b8f76;margin-top:2px;">Wie das Papier-Formular (DIN A4)</div></div>
+        <span style="font-size:18px;color:#3db356;">›</span>
       </button>
 
       <button onclick="closeBericht(); exportTextdatei();" style="
-        padding:18px 16px;background:#fafafa;border:1.5px solid #e0e0e0;
-        border-radius:14px;font-size:14px;font-weight:600;color:#555;
-        cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;display:flex;align-items:center;gap:14px;">
-        <span style="font-size:28px;">📝</span>
-        <div><div style="font-weight:700;font-size:15px;">Als Textdatei speichern</div>
-        <div style="font-size:12px;color:#888;margin-top:2px;">Landet in: Dateien-App → Downloads</div></div>
+        padding:16px;background:#fafafa;border:none;
+        border-radius:16px;cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;
+        display:flex;align-items:center;gap:14px;">
+        <span style="font-size:26px;">📝</span>
+        <div style="flex:1;"><div style="font-weight:700;font-size:15px;color:#444;">Als Textdatei speichern</div>
+        <div style="font-size:12px;color:#999;margin-top:2px;">Landet in: Dateien-App → Downloads</div></div>
+        <span style="font-size:18px;color:#bbb;">›</span>
       </button>
 
       <button onclick="closeBericht(); openArchiv();" style="
-        padding:18px 16px;background:#fafafa;border:1.5px solid #e0e0e0;
-        border-radius:14px;font-size:14px;font-weight:600;color:#555;
-        cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;display:flex;align-items:center;gap:14px;">
-        <span style="font-size:28px;">📁</span>
-        <div><div style="font-weight:700;font-size:15px;">Alte Monatsberichte</div>
-        <div style="font-size:12px;color:#888;margin-top:2px;">Archiv mit gespeicherten Monaten</div></div>
+        padding:16px;background:#fafafa;border:none;
+        border-radius:16px;cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;
+        display:flex;align-items:center;gap:14px;">
+        <span style="font-size:26px;">📁</span>
+        <div style="flex:1;"><div style="font-weight:700;font-size:15px;color:#444;">Alte Monatsberichte</div>
+        <div style="font-size:12px;color:#999;margin-top:2px;">Archiv mit gespeicherten Monaten</div></div>
+        <span style="font-size:18px;color:#bbb;">›</span>
       </button>
 
     </div>
@@ -528,45 +532,47 @@ body {
 
 <!-- SICHERN MODAL -->
 <div class="modal" id="sichernModal">
-  <div class="modal-box">
-    <div class="modal-top">
-      <div style="width:32px;"></div>
-      <div class="modal-title">💾 Sichern</div>
-      <button class="btn-close" onclick="closeSichern()">✕</button>
+  <div class="modal-box" style="padding:0;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#0d2b14,#1d5429);padding:22px 18px 18px;position:relative;">
+      <button class="btn-close" onclick="closeSichern()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.15);color:white;">✕</button>
+      <div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.5);margin-bottom:2px;">BACKUP & SICHERHEIT</div>
+      <div style="font-size:24px;font-weight:800;color:white;">💾 Sichern</div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0 8px;overflow-y:auto;">
+    <div style="display:flex;flex-direction:column;gap:8px;padding:16px 14px;overflow-y:auto;">
 
-      <div style="padding:12px 14px;background:#f0fdf4;border-radius:12px;font-size:12px;color:#374151;line-height:1.6;">
-        ✅ <b>Gut zu wissen:</b> Deine Einträge werden <b>automatisch</b> auf deinem Handy gespeichert – du musst nichts extra tun!<br><br>
-        Ein <b>Backup</b> brauchst du nur als zusätzliche Sicherheit oder wenn du ein neues Handy bekommst.
+      <div style="padding:12px 14px;background:linear-gradient(135deg,#f0fdf4,#e0f5e8);border-radius:14px;font-size:12px;color:#1d5429;line-height:1.6;">
+        ✅ <b>Gut zu wissen:</b> Deine Einträge werden <b>automatisch gespeichert</b> – du musst nichts extra tun! Ein Backup ist nur zusätzliche Sicherheit, z.B. fürs neue Handy.
       </div>
 
       <button onclick="exportDaten();" style="
-        padding:18px 16px;background:#f0faf3;border:2px solid #3db356;
-        border-radius:14px;font-size:14px;font-weight:600;color:#27ae60;
-        cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;display:flex;align-items:center;gap:14px;">
-        <span style="font-size:28px;">📤</span>
-        <div><div style="font-weight:700;font-size:15px;">Backup speichern</div>
-        <div style="font-size:12px;color:#888;margin-top:2px;">Landet in: Dateien-App → Downloads</div></div>
+        padding:16px;background:linear-gradient(135deg,#f0faf3,#e0f5e8);border:none;
+        border-radius:16px;cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;
+        display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(61,179,86,0.12);">
+        <span style="font-size:26px;">📤</span>
+        <div style="flex:1;"><div style="font-weight:700;font-size:15px;color:#1d5429;">Backup speichern</div>
+        <div style="font-size:12px;color:#6b8f76;margin-top:2px;">Landet in: Dateien-App → Downloads</div></div>
+        <span style="font-size:18px;color:#3db356;">›</span>
       </button>
 
       <button onclick="document.getElementById('importFile').click();" style="
-        padding:18px 16px;background:#fff8f0;border:1.5px solid #f0c080;
-        border-radius:14px;font-size:14px;font-weight:600;color:#c07020;
-        cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;display:flex;align-items:center;gap:14px;">
-        <span style="font-size:28px;">📥</span>
-        <div><div style="font-weight:700;font-size:15px;">Backup wiederherstellen</div>
-        <div style="font-size:12px;color:#888;margin-top:2px;">Gespeicherte Backup-Datei auswählen und laden</div></div>
+        padding:16px;background:#fafafa;border:none;
+        border-radius:16px;cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;
+        display:flex;align-items:center;gap:14px;">
+        <span style="font-size:26px;">📥</span>
+        <div style="flex:1;"><div style="font-weight:700;font-size:15px;color:#444;">Backup wiederherstellen</div>
+        <div style="font-size:12px;color:#999;margin-top:2px;">Gespeicherte Backup-Datei laden</div></div>
+        <span style="font-size:18px;color:#bbb;">›</span>
       </button>
       <input type="file" id="importFile" accept=".json,.txt" style="display:none;" onchange="importDaten(event)">
 
       <button onclick="closeSichern(); saveSnapshot();" style="
-        padding:14px 16px;background:#fafafa;border:1.5px solid #e0e0e0;
-        border-radius:14px;font-size:13px;font-weight:600;color:#888;
-        cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;display:flex;align-items:center;gap:14px;">
+        padding:14px 16px;background:#fafafa;border:none;
+        border-radius:16px;cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;
+        display:flex;align-items:center;gap:14px;">
         <span style="font-size:22px;">📊</span>
-        <div><div style="font-weight:700;">Monat im Archiv ablegen</div>
-        <div style="font-size:11px;color:#aaa;margin-top:2px;">Saldo-Stand des Monats festhalten</div></div>
+        <div style="flex:1;"><div style="font-weight:700;font-size:14px;color:#888;">Monat im Archiv ablegen</div>
+        <div style="font-size:11px;color:#bbb;margin-top:2px;">Saldo-Stand des Monats festhalten</div></div>
+        <span style="font-size:18px;color:#ccc;">›</span>
       </button>
 
     </div>
@@ -788,6 +794,8 @@ function render() {
   } else {
     badge.textContent = selectedDate.toLocaleDateString('de-DE',{day:'numeric',month:'long'});
     badge.className = 'date-selected-badge';
+    badge.style.background = '';
+    badge.style.boxShadow = '';
   }
 
   // Soll
