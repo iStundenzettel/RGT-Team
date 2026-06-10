@@ -1164,9 +1164,27 @@ function confirmDeleteAccount() {
 }
 
 // ─── STUNDENPLAN ─────────────────────────────────────────
+const STUNDENPLAN_SLOTS = [
+  { stunde: '1. Stunde', zeit: '08:05–08:50' },
+  { stunde: '2. Stunde', zeit: '08:50–09:35' },
+  { stunde: 'Pause', zeit: '09:35–10:05', pause: true },
+  { stunde: '3. Stunde', zeit: '10:05–10:50' },
+  { stunde: '4. Stunde', zeit: '10:50–11:35' },
+  { stunde: 'Pause', zeit: '11:35–11:50', pause: true },
+  { stunde: '5. Stunde', zeit: '11:50–12:35' },
+  { stunde: '6. Stunde', zeit: '12:35–13:20' },
+  { stunde: 'Pause', zeit: '13:20–13:30', pause: true },
+  { stunde: '7. Stunde', zeit: '13:30–14:15' },
+  { stunde: '8. Stunde', zeit: '14:15–15:00' },
+  { stunde: '9. Stunde', zeit: '15:00–16:00' }
+];
+const SP_TAGE = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
+
 function openStundenplan() {
-  const TAGE = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
-  
+  const TAGE = SP_TAGE;
+  const dow = new Date().getDay();
+  const todayIdx = (dow === 0 || dow === 6) ? 0 : dow - 1;
+
   // ─── KOMPAKTE ÜBERSICHT MIT EDIT-FELDERN ───
   const overviewRows = TAGE.map((tag, idx) => {
     const day = idx + 1;
@@ -1188,78 +1206,64 @@ function openStundenplan() {
       </div>`;
   }).join('');
 
-  // ─── SCHULSTUNDENPLAN ───
-  const stundenplan = [
-    { stunde: '1. Stunde', zeit: '08:05–08:50' },
-    { stunde: '2. Stunde', zeit: '08:50–09:35' },
-    { stunde: 'Pause', zeit: '09:35–10:05', pause: true },
-    { stunde: '3. Stunde', zeit: '10:05–10:50' },
-    { stunde: '4. Stunde', zeit: '10:50–11:35' },
-    { stunde: 'Pause', zeit: '11:35–11:50', pause: true },
-    { stunde: '5. Stunde', zeit: '11:50–12:35' },
-    { stunde: '6. Stunde', zeit: '12:35–13:20' },
-    { stunde: 'Pause', zeit: '13:20–13:30', pause: true },
-    { stunde: '7. Stunde', zeit: '13:30–14:15' },
-    { stunde: '8. Stunde', zeit: '14:15–15:00' },
-    { stunde: '9. Stunde', zeit: '15:00–16:00' }
-  ];
-
-  const selectedDate = new Date();
-  const dayOfWeek = selectedDate.getDay();
-  const dayIndex = dayOfWeek === 0 ? 4 : dayOfWeek - 1;
-  const dayName = TAGE[dayIndex] || 'Montag';
-  
-  let stundenplanHTML = '';
-  stundenplan.forEach((s, i) => {
-    const key = `stundenplan_${dayName}_${i}`;
-    const saved = localStorage.getItem(key) || '';
-    if (s.pause) {
-      stundenplanHTML += `
-        <div style="padding:10px 12px;background:#fff3cd;border-radius:8px;margin-bottom:6px;text-align:center;font-size:12px;color:#666;">
-          ☕ ${s.stunde} (${s.zeit})
-        </div>`;
-    } else {
-      stundenplanHTML += `
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-          <div style="flex:0 0 75px;font-size:11px;color:#666;font-weight:600;">${s.zeit}</div>
-          <input type="text" value="${saved}" placeholder="${s.stunde}" 
-            onchange="localStorage.setItem('stundenplan_${dayName}_${i}', this.value)"
-            style="flex:1;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:Poppins,sans-serif;">
-        </div>`;
-    }
-  });
-
   document.getElementById('stundenplanContent').innerHTML = `
-    <div style="margin-bottom:16px;">
+    <div style="margin-bottom:12px;">
       <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'; this.querySelector('.pfeil').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼';"
         style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#f5f5f5;border-radius:10px;cursor:pointer;">
         <span style="font-size:12px;color:#666;font-weight:600;">✏️ Arbeitszeiten ändern</span>
         <span class="pfeil" style="font-size:10px;color:#999;">▶</span>
       </div>
-      <div style="display:none;">
-        <div style="margin-top:8px;">${overviewRows}</div>
-      </div>
+      <div style="display:none;"><div style="margin-top:8px;">${overviewRows}</div></div>
     </div>
-    
-    <div style="padding:12px;background:#f9f9f9;border-radius:10px;margin-bottom:16px;">
-      <div style="font-size:10px;color:#999;margin-bottom:6px;font-weight:600;">Übersicht (inkl. Pause):</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px;">
-        ${TAGE.map((tag, idx) => {
-          const day = idx + 1;
-          const plan = PLAN[day] || {};
-          const std = plan.soll || 8;
-          return `<span style="padding:4px 8px;background:#e8f5e9;border-radius:6px;white-space:nowrap;">${tag.substring(0,2)}: <b>${std}h</b></span>`;
-        }).join('')}
-      </div>
+
+    <div style="font-size:12px;font-weight:700;color:#3db356;margin-bottom:10px;">📚 Persönlicher Stundenplan</div>
+
+    <div style="display:flex;gap:4px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;" id="spTabs">
+      ${TAGE.map((tag,i) => `
+        <button onclick="switchSpTag(${i})" id="spTab_${i}" style="
+          flex:0 0 auto;padding:6px 10px;border-radius:8px;border:none;cursor:pointer;
+          font-size:12px;font-weight:700;font-family:'Poppins',sans-serif;
+          background:${i===todayIdx?'#3db356':'#f0f0f0'};
+          color:${i===todayIdx?'white':'#888'};">
+          ${tag.substring(0,2)}
+        </button>`).join('')}
     </div>
-    
-    <div style="margin-bottom:12px;">
-      <div style="font-size:12px;font-weight:700;color:#3db356;margin-bottom:10px;">📚 PERSÖNLICHER STUNDENPLAN – ${dayName}</div>
-      <div style="font-size:11px;color:#888;margin-bottom:12px;">Trage hier deine Fächer/Aktivitäten ein:</div>
-      ${stundenplanHTML}
-    </div>`;
-  
+
+    <div id="spContent"></div>`;
+
+  switchSpTag(todayIdx);
   document.getElementById('stundenplanModal').classList.add('open');
+}
+
+function switchSpTag(idx) {
+  const TAGE = SP_TAGE;
+  // Tabs updaten
+  TAGE.forEach((_,i) => {
+    const t = document.getElementById('spTab_'+i);
+    if (!t) return;
+    const isToday = i === ((new Date().getDay()||7)-1);
+    t.style.background = i===idx ? '#3db356' : '#f0f0f0';
+    t.style.color = i===idx ? 'white' : '#888';
+  });
+
+  const tag = TAGE[idx];
+  let html = '';
+  STUNDENPLAN_SLOTS.forEach((s, i) => {
+    const key = `stundenplan_${tag}_${i}`;
+    const saved = localStorage.getItem(key) || '';
+    if (s.pause) {
+      html += `<div style="padding:7px 12px;background:#fff3cd;border-radius:8px;margin-bottom:5px;text-align:center;font-size:11px;color:#888;">☕ ${s.stunde} (${s.zeit})</div>`;
+    } else {
+      html += `
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:7px;">
+          <div style="flex:0 0 75px;font-size:11px;color:#999;font-weight:600;">${s.zeit}</div>
+          <input type="text" value="${saved}" placeholder="${s.stunde}" 
+            onchange="localStorage.setItem('stundenplan_${tag}_${i}', this.value)"
+            style="flex:1;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:12px;font-family:Poppins,sans-serif;">
+        </div>`;
+    }
+  });
+  document.getElementById('spContent').innerHTML = html;
 }
 
 // ─── HILFSFUNKTION: Stunden neu berechnen (mit Pause) ───
