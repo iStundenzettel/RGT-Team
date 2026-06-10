@@ -1028,15 +1028,24 @@ function exportDaten() {
     userData: userData,
     snapshots: JSON.parse(localStorage.getItem('snapshots_'+userData.name)||'[]')
   };
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const name = userData.displayName || userData.name;
+  const datum = new Date().toLocaleDateString('de-DE').replace(/\./g,'-');
+  const inhalt = JSON.stringify(data, null, 2);
+  
+  // iOS Safari: als .txt speichern (zuverlässiger)
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const mimeType = isIOS ? 'text/plain' : 'application/json';
+  const ext = isIOS ? 'txt' : 'json';
+  
+  const blob = new Blob([inhalt], {type: mimeType});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const name = userData.displayName || userData.name;
   a.href = url;
-  a.download = `stundenzettel_${name}_${new Date().toLocaleDateString('de-DE').replace(/\./g,'-')}.json`;
+  a.download = `stundenzettel_${name}_${datum}.${ext}`;
   a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
   closeSaveModal();
-  showToast('📤 Daten exportiert ✓');
+  showToast('📤 Backup gespeichert ✓');
 }
 
 function importDaten(event) {
