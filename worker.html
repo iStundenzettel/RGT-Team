@@ -335,7 +335,7 @@ body {
 
 <div class="card" id="mainCard">
   <div class="card-top">
-    <div class="heute-badge" id="heuteBadge">HEUTE</div>
+    <div class="heute-badge" id="heuteBadge" onclick="openCalendar()" style="cursor:pointer;">HEUTE</div>
     <div class="card-date-right">
       <div class="day" id="cardDay" style="font-size:20px; font-weight:700; color:#222;">Mo, 8. Juni</div>
     </div>
@@ -793,7 +793,7 @@ function render() {
   document.getElementById('cardDay').textContent = dayStr.replace('.','')+', '+datStr;
   document.getElementById('cardTime').textContent = plan ? plan.von+'–'+plan.bis : '–:–';
 
-  // HEUTE Badge
+  // HEUTE Badge (antippen öffnet Kalender)
   const badge = document.getElementById('heuteBadge');
   if (isToday) {
     badge.textContent = 'HEUTE';
@@ -801,7 +801,7 @@ function render() {
     badge.style.background = '#3db356';
     badge.style.boxShadow = '';
   } else {
-    badge.textContent = selectedDate.toLocaleDateString('de-DE',{day:'numeric',month:'long'});
+    badge.innerHTML = '📅 ' + selectedDate.toLocaleDateString('de-DE',{day:'numeric',month:'long'});
     badge.className = 'date-selected-badge';
     badge.style.background = '';
     badge.style.boxShadow = '';
