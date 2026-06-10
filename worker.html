@@ -469,6 +469,24 @@ body {
         <div><div style="font-weight:700;">Daten speichern</div>
         <div style="font-size:12px;color:#aaa;margin-top:2px;">Alle Einträge lokal auf dem Gerät sichern</div></div>
       </button>
+      <button onclick="openMonatsVorschau();" style="
+        padding:16px;background:#f5f0ff;border:1.5px solid #c4a0e8;
+        border-radius:14px;font-size:14px;font-weight:600;color:#6b21a8;
+        cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:24px;">📋</span>
+        <div><div style="font-weight:700;">Monatsübersicht anzeigen</div>
+        <div style="font-size:12px;color:#aaa;margin-top:2px;">Tabelle mit allen Einträgen – Screenshot oder Drucken</div></div>
+      </button>
+
+      <button onclick="exportTextdatei();" style="
+        padding:16px;background:#f0fff4;border:1.5px solid #86efac;
+        border-radius:14px;font-size:14px;font-weight:600;color:#166534;
+        cursor:pointer;font-family:'Poppins',sans-serif;text-align:left;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:24px;">📝</span>
+        <div><div style="font-weight:700;">Als Textdatei speichern</div>
+        <div style="font-size:12px;color:#aaa;margin-top:2px;">Monatsbericht als .txt Datei</div></div>
+      </button>
+
       <button onclick="savePDF();" style="
         padding:16px;background:#f0f7ff;border:1.5px solid #4f9ff0;
         border-radius:14px;font-size:14px;font-weight:600;color:#357abd;
@@ -1021,6 +1039,151 @@ function updateCalBtn() {
 function openSaveOptions() {
   document.getElementById('saveModal').classList.add('open');
 }
+function getMonatsEintraege(monat, jahr) {
+  const result = [];
+  const WOCHENTAGE = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+  const TAGE_IM_MONAT = new Date(jahr, monat, 0).getDate();
+  for (let d = 1; d <= TAGE_IM_MONAT; d++) {
+    const datum = new Date(jahr, monat-1, d);
+    const dow = datum.getDay();
+    if (dow === 0 || dow === 6) continue; // Keine Wochenenden
+    const ds = `${jahr}-${String(monat).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const plan = PLAN[dow] || {};
+    const soll = plan.soll || 0;
+    const eintrag = entries[ds];
+    if (eintrag) {
+      result.push({ ds, tag: WOCHENTAGE[dow]+'. '+d+'.', eintrag, soll, plan });
+    }
+  }
+  return result;
+}
+
+function openMonatsVorschau() {
+  closeSaveModal();
+  const jetzt = new Date();
+  const monat = jetzt.getMonth() + 1;
+  const jahr = jetzt.getFullYear();
+  const name = userData.displayName || userData.name;
+  const monatName = jetzt.toLocaleDateString('de-DE', {month:'long', year:'numeric'});
+  const eintraege = getMonatsEintraege(monat, jahr);
+  
+  let gesamtIst = 0, gesamtSoll = 0;
+  const STATUS_LABEL = { normal:'Normal', frei:'Frei', krank:'Krank', schule:'Keine Schule' };
+  
+  const zeilen = eintraege.map(({tag, eintrag, soll}) => {
+    const ist = eintrag.hours || 0;
+    const diff = ist - soll;
+    const sign = diff >= 0 ? '+' : '';
+    gesamtIst += ist;
+    gesamtSoll += soll;
+    const status = STATUS_LABEL[eintrag.status||'normal'] || '';
+    const notiz = eintrag.notes ? `<br><span style="font-size:10px;color:#aaa;font-style:italic;">${eintrag.notes}</span>` : '';
+    const diffCol = diff === 0 ? '<span style="color:#aaa;">0h</span>' : diff > 0 ? `<span style="color:#27ae60;">${sign}${diff.toFixed(1)}h</span>` : `<span style="color:#d9534f;">${diff.toFixed(1)}h</span>`;
+    return `<tr style="border-bottom:1px solid #f0f0f0;">
+      <td style="padding:8px 6px;font-size:12px;font-weight:600;">${tag}${notiz}</td>
+      <td style="padding:8px 6px;font-size:11px;color:#888;">${eintrag.status !== 'normal' ? status : (eintrag.hours||0).toFixed(1)+'h'}</td>
+      <td style="padding:8px 6px;font-size:12px;font-weight:700;text-align:right;">${ist.toFixed(1)}h</td>
+      <td style="padding:8px 6px;font-size:12px;text-align:right;">${diffCol}</td>
+    </tr>`;
+  }).join('');
+
+  const gesamtDiff = gesamtIst - gesamtSoll;
+  const gesamtSign = gesamtDiff >= 0 ? '+' : '';
+  const gesamtColor = gesamtDiff >= 0 ? '#27ae60' : '#d9534f';
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;overflow-y:auto;padding:20px 14px;';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:20px;max-width:480px;margin:0 auto;overflow:hidden;font-family:Poppins,sans-serif;">
+      <div style="background:#0d2b14;padding:20px;color:white;text-align:center;">
+        <div style="font-size:11px;letter-spacing:2px;opacity:0.6;margin-bottom:4px;">STUNDENZETTEL</div>
+        <div style="font-size:22px;font-weight:800;">${name}</div>
+        <div style="font-size:13px;opacity:0.7;margin-top:4px;">${monatName}</div>
+      </div>
+      <div style="padding:16px;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="border-bottom:2px solid #e0e0e0;">
+              <th style="padding:8px 6px;font-size:11px;color:#aaa;text-align:left;">TAG</th>
+              <th style="padding:8px 6px;font-size:11px;color:#aaa;text-align:left;">STATUS</th>
+              <th style="padding:8px 6px;font-size:11px;color:#aaa;text-align:right;">IST</th>
+              <th style="padding:8px 6px;font-size:11px;color:#aaa;text-align:right;">DIFF</th>
+            </tr>
+          </thead>
+          <tbody>${zeilen || '<tr><td colspan="4" style="padding:20px;text-align:center;color:#aaa;">Keine Einträge</td></tr>'}</tbody>
+        </table>
+        <div style="margin-top:16px;padding:14px;background:#f9f9f9;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:11px;color:#aaa;">Gesamt Ist / Soll</div>
+            <div style="font-size:14px;font-weight:700;">${gesamtIst.toFixed(1)}h / ${gesamtSoll.toFixed(1)}h</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;color:#aaa;">Saldo diesen Monat</div>
+            <div style="font-size:20px;font-weight:800;color:${gesamtColor};">${gesamtSign}${gesamtDiff.toFixed(1)}h</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;font-size:11px;color:#bbb;text-align:center;">Startsaldo: ${userData.startsaldo || 0}h · Gesamt-Saldo: ${(parseFloat(userData.startsaldo||0)+gesamtDiff).toFixed(1)}h</div>
+      </div>
+      <div style="padding:0 16px 16px;display:flex;gap:8px;">
+        <button onclick="this.closest('div[style*=fixed]').remove();" style="
+          flex:1;padding:12px;background:#f5f5f5;color:#666;border:none;
+          border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:Poppins,sans-serif;">
+          ✕ Schließen
+        </button>
+        <button onclick="window.print();" style="
+          flex:2;padding:12px;background:#0d2b14;color:white;border:none;
+          border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:Poppins,sans-serif;">
+          🖨️ Drucken / PDF
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function exportTextdatei() {
+  const jetzt = new Date();
+  const monat = jetzt.getMonth() + 1;
+  const jahr = jetzt.getFullYear();
+  const name = userData.displayName || userData.name;
+  const monatName = jetzt.toLocaleDateString('de-DE', {month:'long', year:'numeric'});
+  const eintraege = getMonatsEintraege(monat, jahr);
+  const STATUS_LABEL = { normal:'Normal', frei:'Frei', krank:'Krank', schule:'Keine Schule' };
+
+  let txt = `STUNDENZETTEL – ${name}\n`;
+  txt += `${monatName}\n`;
+  txt += `${'─'.repeat(40)}\n\n`;
+  txt += `TAG        STATUS        IST     DIFF\n`;
+  txt += `${'─'.repeat(40)}\n`;
+
+  let gesamtIst = 0, gesamtSoll = 0;
+  eintraege.forEach(({tag, eintrag, soll}) => {
+    const ist = eintrag.hours || 0;
+    const diff = ist - soll;
+    const sign = diff >= 0 ? '+' : '';
+    const status = STATUS_LABEL[eintrag.status||'normal'] || 'Normal';
+    const notiz = eintrag.notes ? ` (${eintrag.notes})` : '';
+    gesamtIst += ist;
+    gesamtSoll += soll;
+    txt += `${tag.padEnd(10)} ${status.padEnd(13)} ${ist.toFixed(1).padStart(4)}h  ${sign}${diff.toFixed(1)}h${notiz}\n`;
+  });
+
+  txt += `\n${'─'.repeat(40)}\n`;
+  txt += `Gesamt:    ${gesamtIst.toFixed(1)}h (Soll: ${gesamtSoll.toFixed(1)}h)\n`;
+  txt += `Saldo:     ${gesamtIst-gesamtSoll >= 0 ? '+' : ''}${(gesamtIst-gesamtSoll).toFixed(1)}h\n`;
+  txt += `Startsaldo: ${userData.startsaldo || 0}h\n`;
+  txt += `\nErstellt: ${new Date().toLocaleDateString('de-DE')}\n`;
+
+  const blob = new Blob([txt], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Stundenzettel_${name}_${monatName}.txt`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  closeSaveModal();
+  showToast('📝 Textdatei gespeichert ✓');
+}
+
 function exportDaten() {
   const data = {
     version: 1,
