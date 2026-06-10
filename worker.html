@@ -1722,25 +1722,22 @@ function closeStundenplan() {
 
 function saveStundenplan() {
   const TAGE = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
-  let total = 0;
   TAGE.forEach((tag, i) => {
     const dow = i + 1;
-    const von  = document.getElementById(`sp_von_${dow}`)?.value || '08:00';
-    const bis  = document.getElementById(`sp_bis_${dow}`)?.value || '16:00';
-    const soll = parseFloat(document.getElementById(`sp_soll_${dow}`)?.value) || 0;
-    total += soll;
+    const p = PLAN[dow];
+    if (!p) return; // Nichts überschreiben wenn keine Daten da sind!
     if (!userData.schedule) userData.schedule = [];
     const idx = userData.schedule.findIndex(s => s.day === tag);
-    const entry = { day: tag, von, bis, soll };
+    const alt = idx >= 0 ? userData.schedule[idx] : {};
+    const entry = { day: tag, von: p.von, bis: p.bis, soll: p.soll, teamtag: alt.teamtag || false };
     if (idx >= 0) userData.schedule[idx] = entry;
     else userData.schedule.push(entry);
-    PLAN[dow] = { von, bis, soll };
   });
-  userData.wochenstunden = Math.round(total * 10) / 10;
-  document.getElementById('weekHours').textContent = userData.wochenstunden.toLocaleString('de-DE') + ' Std.';
+  // Wochenstunden bleiben unverändert (fester Vertragswert, z.B. 31)
   doSave();
   closeStundenplan();
   showToast('✓ Stundenplan gespeichert');
+  render();
 }
 
 // ─── VERLAUF ─────────────────────────────────────────────
