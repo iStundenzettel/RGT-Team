@@ -238,22 +238,33 @@ body {
   <div class="card">
     <div class="card-title">⚙️ Admin-Aktionen</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
-      <button onclick="showView('viewReg')" style="
-        padding:13px;background:#f0faf3;color:#27ae60;
+
+      <button onclick="createOrShareTeamLink()" style="
+        padding:13px;background:linear-gradient(135deg,#f0faf3,#e0f5e8);color:#27ae60;
         border:1.5px solid #c0e8cc;border-radius:12px;
         font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;
         text-align:left;">
-        ➕ Neue Person anmelden
+        🔗 Team-Link erstellen & teilen
       </button>
-      <button onclick="exportAllCSV()" style="
-        padding:13px;background:#f0f7ff;color:#4f9ff0;
+
+      <button onclick="loadCloudUsers()" style="
+        padding:13px;background:linear-gradient(135deg,#f0f7ff,#e0eeff);color:#4f9ff0;
         border:1.5px solid #c0d8f0;border-radius:12px;
+        font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;
+        text-align:left;">
+        ☁️ Alle Mitarbeiter aus Cloud laden
+      </button>
+
+      <button onclick="exportAllCSV()" style="
+        padding:13px;background:#f5f5f5;color:#888;
+        border:1.5px solid #e0e0e0;border-radius:12px;
         font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;
         text-align:left;">
         📊 Übersicht exportieren (CSV)
       </button>
+
       <button onclick="lockAdmin()" style="
-        padding:13px;background:#f5f5f5;color:#888;
+        padding:13px;background:#f5f5f5;color:#aaa;
         border:1.5px solid #e0e0e0;border-radius:12px;
         font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;
         text-align:left;">
@@ -265,6 +276,90 @@ body {
 
 <script>
 const ADMIN_PIN = 'owa';
+const CLOUD_KEY = '$2a$10$/LZXkAkkscq86PkmjcvaHufucGAf00w/BzoLV3T83QaIvOqLgleX2';
+const CLOUD_API = 'https://api.jsonbin.io/v3/b';
+
+function getTeamBinId() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const fromUrl = urlParams.get('bin');
+  if (fromUrl) { localStorage.setItem('rgt_team_bin', fromUrl); return fromUrl; }
+  return localStorage.getItem('rgt_team_bin');
+}
+
+async function createOrShareTeamLink() {
+  let binId = getTeamBinId();
+  if (!binId) {
+    // Neuen Bin erstellen
+    try {
+      const res = await fetch(CLOUD_API, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': CLOUD_KEY,
+          'X-Bin-Name': 'RGT-Stundenzettel',
+          'X-Bin-Private': 'true'
+        },
+        body: JSON.stringify({ users: {} })
+      });
+      const data = await res.json();
+      binId = data.metadata.id;
+      localStorage.setItem('rgt_team_bin', binId);
+      alert('✅ Team-Datenbank erstellt!\n\nJetzt auf "Team-Link erstellen & teilen" drücken um den Link zu verschicken!');
+    } catch(e) {
+      alert('❌ Fehler beim Erstellen: ' + e.message);
+      return;
+    }
+  }
+  const url = `${window.location.origin}${window.location.pathname}?bin=${binId}`;
+  if (navigator.share) {
+    navigator.share({
+      title: 'Stundenzettel RGT – Anmeldung',
+      text: 'Bitte hier anmelden für den digitalen Stundenzettel:',
+      url: url
+    });
+  } else {
+    navigator.clipboard.writeText(url);
+    alert('✓ Link kopiert!\n\n' + url);
+  }
+}
+
+async function loadCloudUsers() {
+  const binId = getTeamBinId();
+  if (!binId) {
+    alert('⚠️ Noch kein Team-Link erstellt!\nBitte zuerst "Team-Link erstellen & teilen" drücken.');
+    return;
+  }
+  try {
+    const res = await fetch(`${CLOUD_API}/${binId}/latest`, {
+      headers: { 'X-Master-Key': CLOUD_KEY }
+    });
+    const data = await res.json();
+    const cloudUsers = data.record?.users || {};
+    const list = document.getElementById('adminUserList');
+    const keys = Object.keys(cloudUsers);
+    if (!keys.length) {
+      list.innerHTML = '<div class="empty-state">Noch keine Mitarbeiter in der Cloud.<br>Alle müssen sich zuerst einloggen!</div>';
+      return;
+    }
+    list.innerHTML = keys.map(key => {
+      const u = cloudUsers[key];
+      const saldo = u.saldo || 0;
+      const sign = saldo >= 0 ? '+' : '';
+      const sc = saldo > 0 ? '#27ae60' : saldo < 0 ? '#d9534f' : '#888';
+      const sb = saldo > 0 ? '#f0faf3' : saldo < 0 ? '#fff1f2' : '#f5f5f5';
+      const nameParts = u.displayName.split(' ');
+      const shortName = nameParts.length > 1 ? nameParts[0]+' '+nameParts[nameParts.length-1][0]+'.' : u.displayName;
+      const syncTime = u.lastSync ? new Date(u.lastSync).toLocaleDateString('de-DE') : '–';
+      return `<div class="admin-card" onclick="window.open('worker.html?user=${key}&bin=${binId}','_blank')">
+        <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:2px;">${shortName}</div>
+        <div style="font-size:10px;color:#aaa;margin-bottom:6px;">${u.wochenstunden}h/W · ${u.eintraege} Eintr. · ${syncTime}</div>
+        <div style="font-size:16px;font-weight:800;color:${sc};background:${sb};padding:4px 8px;border-radius:8px;text-align:center;">${sign}${(saldo).toLocaleString('de-DE')}h</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    alert('❌ Fehler beim Laden: ' + e.message);
+  }
+}
 
 const ROLLE_DEFAULTS = {
   erzieher: {
@@ -427,6 +522,20 @@ function doRegister() {
 }
 
 // ─── ADMIN ───────────────────────────────────────────────
+function shareLink() {
+  const url = window.location.href.split('?')[0];
+  if (navigator.share) {
+    navigator.share({
+      title: 'Stundenzettel RGT',
+      text: 'Bitte hier anmelden für den digitalen Stundenzettel:',
+      url: url
+    });
+  } else {
+    navigator.clipboard.writeText(url);
+    alert('✓ Link in Zwischenablage kopiert!');
+  }
+}
+
 function checkPin() {
   const val = document.getElementById('pinInput').value;
   if (val === ADMIN_PIN) {

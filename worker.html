@@ -336,8 +336,16 @@ body {
 <div class="card" id="mainCard">
   <div class="card-top">
     <div class="heute-badge" id="heuteBadge" onclick="openCalendar()" style="cursor:pointer;">HEUTE</div>
-    <div class="card-date-right">
+    <div class="card-date-right" style="display:flex;align-items:flex-start;gap:8px;">
       <div class="day" id="cardDay" style="font-size:20px; font-weight:700; color:#222;">Mo, 8. Juni</div>
+      <button onclick="resetToSoll()" id="resetBtn" style="
+        background:none;border:none;cursor:pointer;
+        font-size:15px;padding:3px;border-radius:8px;
+        color:#ddd;transition:all 0.2s;margin-top:2px;"
+        ontouchstart="this.style.color='#3db356';"
+        ontouchend="this.style.color='#ddd';">
+        🔄
+      </button>
     </div>
   </div>
 
@@ -1037,11 +1045,66 @@ function scheduleSave() {
   saveTimer = setTimeout(doSave, 600);
 }
 
+// ─── CLOUD SYNC (JSONbin.io) ─────────────────────────────
+const CLOUD_KEY = '$2a$10$/LZXkAkkscq86PkmjcvaHufucGAf00w/BzoLV3T83QaIvOqLgleX2';
+const CLOUD_API = 'https://api.jsonbin.io/v3/b';
+
+function getTeamBinId() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const fromUrl = urlParams.get('bin');
+  if (fromUrl) { localStorage.setItem('rgt_team_bin', fromUrl); return fromUrl; }
+  return localStorage.getItem('rgt_team_bin');
+}
+
+function calcSaldoLocal() {
+  const plan = {};
+  (userData.schedule||[]).forEach(s => {
+    const map = {Montag:1,Dienstag:2,Mittwoch:3,Donnerstag:4,Freitag:5};
+    plan[map[s.day]] = s.soll||0;
+  });
+  let saldo = parseFloat(userData.startsaldo)||0;
+  Object.entries(entries).forEach(([ds,e]) => {
+    const d = new Date(ds+'T12:00:00');
+    const soll = plan[d.getDay()]||0;
+    saldo += (e.hours||0) - soll;
+  });
+  return Math.round(saldo*100)/100;
+}
+
+async function syncToCloud() {
+  const binId = getTeamBinId();
+  if (!binId || !userData) return;
+  try {
+    // Aktuellen Stand lesen
+    const readRes = await fetch(`${CLOUD_API}/${binId}/latest`, {
+      headers: { 'X-Master-Key': CLOUD_KEY }
+    });
+    const current = await readRes.json();
+    const allUsers = current.record?.users || {};
+    // Eigenen Eintrag updaten
+    allUsers[userData.name] = {
+      displayName: userData.displayName || userData.name,
+      wochenstunden: userData.wochenstunden || 0,
+      rolle: userData.rolle || '',
+      saldo: calcSaldoLocal(),
+      eintraege: Object.keys(entries).length,
+      lastSync: new Date().toISOString()
+    };
+    // Zurückschreiben
+    await fetch(`${CLOUD_API}/${binId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_KEY },
+      body: JSON.stringify({ users: allUsers })
+    });
+  } catch(e) { console.log('Cloud sync fehlgeschlagen:', e); }
+}
+
 function doSave() {
   userData.eintraege = entries;
   localStorage.setItem('stundenzettel_'+userData.name, JSON.stringify(userData));
   showToast('Gespeichert ✓');
   updateSaldo();
+  syncToCloud(); // Cloud Sync (async, im Hintergrund)
 }
 
 function manualSave() { doSave(); }
