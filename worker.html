@@ -1057,6 +1057,7 @@ function scheduleSave() {
 // ─── CLOUD SYNC (JSONbin.io) ─────────────────────────────
 const CLOUD_KEY = '$2a$10$/LZXkAkkscq86PkmjcvaHufucGAf00w/BzoLV3T83QaIvOqLgleX2';
 const CLOUD_API = 'https://api.jsonbin.io/v3/b';
+const REGISTRY_BIN = '6a3007c0f5f4af5e29f58336'; // Team-Registry
 
 function getTeamBinId() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -1081,17 +1082,10 @@ function calcSaldoLocal() {
 }
 
 async function syncToCloud() {
-  const binId = getTeamBinId();
-  if (!binId || !userData) return;
+  const registryBin = getTeamBinId() || REGISTRY_BIN;
+  if (!userData) return;
   try {
-    // Aktuellen Stand lesen
-    const readRes = await fetch(`${CLOUD_API}/${binId}/latest`, {
-      headers: { 'X-Master-Key': CLOUD_KEY }
-    });
-    const current = await readRes.json();
-    const allUsers = current.record?.users || {};
-    // Eigenen Eintrag updaten
-    allUsers[userData.name] = {
+    const summary = {
       displayName: userData.displayName || userData.name,
       wochenstunden: userData.wochenstunden || 0,
       rolle: userData.rolle || '',
@@ -1099,12 +1093,49 @@ async function syncToCloud() {
       eintraege: Object.keys(entries).length,
       lastSync: new Date().toISOString()
     };
-    // Zurückschreiben
-    await fetch(`${CLOUD_API}/${binId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_KEY },
-      body: JSON.stringify({ users: allUsers })
-    });
+
+    // Prüfen ob dieser User schon einen eigenen Bin hat
+    let userBinId = localStorage.getItem('rgt_user_bin_' + userData.name);
+
+    if (!userBinId) {
+      // Neuen persönlichen Bin erstellen
+      const createRes = await fetch(CLOUD_API, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': CLOUD_KEY,
+          'X-Bin-Name': 'RGT_' + userData.name,
+          'X-Bin-Private': 'true'
+        },
+        body: JSON.stringify(summary)
+      });
+      const created = await createRes.json();
+      userBinId = created.metadata?.id;
+      if (!userBinId) return;
+      localStorage.setItem('rgt_user_bin_' + userData.name, userBinId);
+
+      // Bin-ID in Registry eintragen (lesen → updaten → schreiben)
+      try {
+        const regRes = await fetch(`${CLOUD_API}/${registryBin}/latest`, {
+          headers: { 'X-Master-Key': CLOUD_KEY }
+        });
+        const reg = await regRes.json();
+        const users = reg.record?.users || {};
+        users[userData.name] = userBinId;
+        await fetch(`${CLOUD_API}/${registryBin}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_KEY },
+          body: JSON.stringify({ users })
+        });
+      } catch(e) { console.log('Registry update fehlgeschlagen:', e); }
+    } else {
+      // Eigenen Bin updaten (kein Race Condition!)
+      await fetch(`${CLOUD_API}/${userBinId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_KEY },
+        body: JSON.stringify(summary)
+      });
+    }
   } catch(e) { console.log('Cloud sync fehlgeschlagen:', e); }
 }
 

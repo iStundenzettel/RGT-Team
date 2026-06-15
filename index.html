@@ -324,40 +324,48 @@ async function createOrShareTeamLink() {
 }
 
 async function loadCloudUsers() {
-  const binId = getTeamBinId();
-  if (!binId) {
-    alert('⚠️ Noch kein Team-Link erstellt!\nBitte zuerst "Team-Link erstellen & teilen" drücken.');
-    return;
-  }
+  const registryBin = localStorage.getItem('rgt_team_bin') || '6a3007c0f5f4af5e29f58336';
+  const list = document.getElementById('adminUserList');
+  list.innerHTML = '<div class="empty-state">⏳ Lade Mitarbeiter...</div>';
   try {
-    const res = await fetch(`${CLOUD_API}/${binId}/latest`, {
+    // Registry lesen
+    const regRes = await fetch(`${CLOUD_API}/${registryBin}/latest`, {
       headers: { 'X-Master-Key': CLOUD_KEY }
     });
-    const data = await res.json();
-    const cloudUsers = data.record?.users || {};
-    const list = document.getElementById('adminUserList');
-    const keys = Object.keys(cloudUsers);
+    const reg = await regRes.json();
+    const userBins = reg.record?.users || {};
+    const keys = Object.keys(userBins);
     if (!keys.length) {
       list.innerHTML = '<div class="empty-state">Noch keine Mitarbeiter in der Cloud.<br>Alle müssen sich zuerst einloggen!</div>';
       return;
     }
-    list.innerHTML = keys.map(key => {
-      const u = cloudUsers[key];
+    // Jeden User-Bin einzeln lesen
+    const userDataList = await Promise.all(keys.map(async key => {
+      try {
+        const res = await fetch(`${CLOUD_API}/${userBins[key]}/latest`, {
+          headers: { 'X-Master-Key': CLOUD_KEY }
+        });
+        const data = await res.json();
+        return { key, ...data.record };
+      } catch(e) { return null; }
+    }));
+
+    list.innerHTML = userDataList.filter(Boolean).map(u => {
       const saldo = u.saldo || 0;
       const sign = saldo >= 0 ? '+' : '';
       const sc = saldo > 0 ? '#27ae60' : saldo < 0 ? '#d9534f' : '#888';
       const sb = saldo > 0 ? '#f0faf3' : saldo < 0 ? '#fff1f2' : '#f5f5f5';
-      const nameParts = u.displayName.split(' ');
+      const nameParts = (u.displayName||u.key).split(' ');
       const shortName = nameParts.length > 1 ? nameParts[0]+' '+nameParts[nameParts.length-1][0]+'.' : u.displayName;
       const syncTime = u.lastSync ? new Date(u.lastSync).toLocaleDateString('de-DE') : '–';
-      return `<div class="admin-card" onclick="window.open('worker.html?user=${key}&bin=${binId}','_blank')">
+      return `<div class="admin-card" onclick="goToUser('${u.key}')">
         <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:2px;">${shortName}</div>
-        <div style="font-size:10px;color:#aaa;margin-bottom:6px;">${u.wochenstunden}h/W · ${u.eintraege} Eintr. · ${syncTime}</div>
-        <div style="font-size:16px;font-weight:800;color:${sc};background:${sb};padding:4px 8px;border-radius:8px;text-align:center;">${sign}${(saldo).toLocaleString('de-DE')}h</div>
+        <div style="font-size:10px;color:#aaa;margin-bottom:6px;">${u.wochenstunden}h/W · ${u.eintraege||0} Eintr. · ${syncTime}</div>
+        <div style="font-size:16px;font-weight:800;color:${sc};background:${sb};padding:4px 8px;border-radius:8px;text-align:center;">${sign}${saldo.toLocaleString('de-DE')}h</div>
       </div>`;
     }).join('');
   } catch(e) {
-    alert('❌ Fehler beim Laden: ' + e.message);
+    list.innerHTML = '<div class="empty-state">❌ Fehler beim Laden. Bitte nochmal versuchen.</div>';
   }
 }
 
