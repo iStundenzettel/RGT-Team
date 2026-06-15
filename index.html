@@ -200,7 +200,7 @@ body {
     <div class="form-group">
       <label class="form-label">Startsaldo (optional)</label>
       <div style="display:flex;align-items:center;gap:8px;">
-        <input class="form-input" id="regSaldo" type="text" inputmode="decimal" placeholder="z.B. -5 oder +3" style="flex:1;">
+        <input class="form-input" id="regSaldo" type="text" placeholder="z.B. -5 oder +3" style="flex:1;" pattern="[+-]?[0-9]*[.,]?[0-9]*">
         <span style="font-size:12px;color:#aaa;">Std.</span>
       </div>
       <div style="font-size:11px;color:#aaa;margin-top:4px;">Übertrag aus Vormonaten.</div>
@@ -510,7 +510,8 @@ function doRegister() {
   const FESTE_STUNDEN = { erzieher: 31, teamleitung: 31, ergaenzung: 15 };
   const basis = FESTE_STUNDEN[selectedRolle] || Math.round(totalSoll*10)/10;
   const wochenstunden = basis + selectedZusatz;
-  const startsaldo = parseFloat(document.getElementById('regSaldo').value) || 0;
+  const saldoRaw = document.getElementById('regSaldo').value.replace(',','.').trim();
+  const startsaldo = parseFloat(saldoRaw) || 0;
   const userData = {
     name: nameKey, displayName: nameRaw, rolle: selectedRolle,
     wochenstunden, startsaldo, schedule, eintraege: {},
