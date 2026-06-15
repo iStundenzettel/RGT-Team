@@ -1785,18 +1785,23 @@ function updateStundenBerechnung(day) {
   let vonMin = vH * 60 + vM;
   let bisMin = bH * 60 + bM;
   
-  let arbeitsMin = bisMin - vonMin;
-  
-  // Pause 09:35–10:05 (30 Min) abziehen wenn in dieser Zeit gearbeitet
-  const pauseVonMin = 9 * 60 + 35;  // 09:35
-  const pauseBisMin = 10 * 60 + 5;  // 10:05
-  
+  let bruttoMin = bisMin - vonMin;
+
+  // Pausenregel:
+  // Frühschicht (Start ≤ 08:00) UND langer Tag (brutto ≥ 9h) → 45 Min Pause
+  // Alle anderen mit Überschneidung 09:35–10:05 → 30 Min Pause
+  const pauseVonMin = 9 * 60 + 35; // 09:35
+  const pauseBisMin = 10 * 60 + 5; // 10:05
+  const istFrühschicht = vonMin <= 8 * 60; // Start ≤ 08:00
+  const istLangerTag = bruttoMin >= 9 * 60; // ≥ 9h brutto
+
+  let pause = 0;
   if (vonMin < pauseBisMin && bisMin > pauseVonMin) {
-    arbeitsMin -= 30;
+    pause = (istFrühschicht && istLangerTag) ? 45 : 30;
   }
-  
-  const stunden = arbeitsMin / 60;
-  PLAN[day].soll = Math.round(stunden * 10) / 10;
+
+  const nettoMin = bruttoMin - pause;
+  PLAN[day].soll = Math.round((nettoMin / 60) * 10) / 10;
 }
 
 function closeStundenplan() {
