@@ -995,16 +995,19 @@ function addHours(delta) {
   const dow = selectedDate.getDay();
   const soll = PLAN[dow] ? PLAN[dow].soll : 0;
 
-  // Auf 5-Minuten-Schritte runden (5 Min = 1/12 Stunde)
-  const raw = todayVal + delta;
-  todayVal = Math.round(raw * 12) / 12;
-  todayVal = Math.round(todayVal * 100) / 100;
+  // In Minuten rechnen für saubere 5-Min-Schritte
+  const currentMin = Math.round(todayVal * 60);
+  const deltaMin = Math.round(delta * 60);
+  const newMin = currentMin + deltaMin;
+  // Auf 5 Minuten runden
+  const roundedMin = Math.round(newMin / 5) * 5;
+  todayVal = Math.round((roundedMin / 60) * 100) / 100;
 
-  if (!entries[ds]) entries[ds] = {hours:soll, status:'normal', notes:''};
+  if (!entries[ds]) entries[ds] = {hours: soll, status:'normal', notes:''};
   entries[ds].hours = todayVal;
 
   updateDisplay(soll);
-  scheduleSave();
+  doSave(); // Direkt speichern, nicht verzögert!
 }
 
 function resetToSoll() {
