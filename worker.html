@@ -351,15 +351,15 @@ body {
 
   <div class="hours-row">
     <div style="display:flex; align-items:flex-end; gap:10px;">
-      <div class="hours-value" id="hoursVal">0,00</div>
+      <div class="hours-value" id="hoursVal" onclick="editHoursDirectly()" style="cursor:pointer;" title="Antippen zum Bearbeiten">0,00</div>
       <div style="padding-bottom:6px;">
         <div class="hours-unit">Std.</div>
         <div style="font-size:13px; color:#888; font-weight:500; white-space:nowrap; margin-top:2px;" id="cardTime">–:–</div>
       </div>
     </div>
     <div class="ctrl-btns" style="align-self:center; margin-top:-8px;">
-      <button class="btn-ctrl btn-minus" onclick="addHours(-0.0833)">−</button>
-      <button class="btn-ctrl btn-plus"  onclick="addHours(+0.0833)">+</button>
+      <button class="btn-ctrl btn-minus" onclick="addHours(-0.25)">−</button>
+      <button class="btn-ctrl btn-plus"  onclick="addHours(+0.25)">+</button>
     </div>
   </div>
 
@@ -994,20 +994,26 @@ function addHours(delta) {
   const ds = fmtDate(selectedDate);
   const dow = selectedDate.getDay();
   const soll = PLAN[dow] ? PLAN[dow].soll : 0;
-
-  // In Minuten rechnen für saubere 5-Min-Schritte
-  const currentMin = Math.round(todayVal * 60);
-  const deltaMin = Math.round(delta * 60);
-  const newMin = currentMin + deltaMin;
-  // Auf 5 Minuten runden
-  const roundedMin = Math.round(newMin / 5) * 5;
-  todayVal = Math.round((roundedMin / 60) * 100) / 100;
-
+  todayVal = Math.round((todayVal + delta) * 100) / 100;
   if (!entries[ds]) entries[ds] = {hours: soll, status:'normal', notes:''};
   entries[ds].hours = todayVal;
-
   updateDisplay(soll);
-  doSave(); // Direkt speichern, nicht verzögert!
+  doSave();
+}
+
+function editHoursDirectly() {
+  const ds = fmtDate(selectedDate);
+  const dow = selectedDate.getDay();
+  const soll = PLAN[dow] ? PLAN[dow].soll : 0;
+  const input = prompt('Stunden eingeben (z.B. 7,5 oder 7.5):', todayVal.toLocaleString('de-DE'));
+  if (input === null) return;
+  const val = parseFloat(input.replace(',','.'));
+  if (isNaN(val)) return;
+  todayVal = Math.round(val * 100) / 100;
+  if (!entries[ds]) entries[ds] = {hours: soll, status:'normal', notes:''};
+  entries[ds].hours = todayVal;
+  updateDisplay(soll);
+  doSave();
 }
 
 function resetToSoll() {
