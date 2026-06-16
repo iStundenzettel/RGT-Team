@@ -107,7 +107,7 @@ body {
 .progress-fill { height:100%; background:linear-gradient(to right,#3db356,#27ae60); transition:width 0.3s; }
 
 /* STATUS BUTTONS */
-.status-row { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:7px; margin-bottom:10px; }
+.status-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:10px; }
 .btn-status {
   padding:10px 0; border:2px solid #e0e0e0; background:white;
   border-radius:14px; font-size:12px; font-weight:600;
@@ -132,6 +132,8 @@ body {
 .btn-status.active-frei    { border-color:#f59e0b; background:#fffbeb; color:#d97706; }
 .btn-status.active-krank   { border-color:#60a5fa; background:#eff6ff; color:#3b82f6; }
 .btn-status.active-schule  { border-color:#ef4444; background:#fff1f2; color:#dc2626; }
+.btn-status.active-urlaub  { border-color:#f59e0b; background:#fff8f0; color:#ea7c00; }
+.btn-status.active-sonder  { border-color:#4f9ff0; background:#f0f7ff; color:#357abd; }
 
 /* NOTES */
 .notes-label { font-size:12px; color:#bbb; font-weight:600; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
@@ -371,10 +373,34 @@ body {
   <div class="progress"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
 
   <div class="status-row">
-    <button class="btn-status" id="btn-normal" onclick="setStatus('normal')">✓ Normal</button>
-    <button class="btn-status" id="btn-frei"   onclick="setStatus('frei')">⭐ Frei</button>
-    <button class="btn-status" id="btn-krank"  onclick="setStatus('krank')">😷 Krank</button>
-    <button class="btn-status" id="btn-schule" onclick="setStatus('schule')">🚫 Schule</button>
+    <button class="btn-status" id="btn-normal"  onclick="setStatus('normal')">✓ Normal</button>
+    <button class="btn-status" id="btn-frei"    onclick="setStatus('frei')">⭐ Frei</button>
+    <button class="btn-status" id="btn-krank"   onclick="setStatus('krank')">😷 Krank</button>
+    <button class="btn-status" id="btn-schule"  onclick="setStatus('schule')">🚫 Schule</button>
+    <button class="btn-status" id="btn-urlaub"  onclick="setStatus('urlaub')">🏖️ Urlaub</button>
+    <button class="btn-status" id="btn-sonder"  onclick="setStatus('sonder')">⏰ Sonderzeit</button>
+  </div>
+
+  <!-- SONDERZEIT EINGABE -->
+  <div id="sonderzeitBox" style="display:none;background:#f0f7ff;border-radius:14px;padding:12px 14px;margin-bottom:10px;">
+    <div style="font-size:12px;color:#4f9ff0;font-weight:700;margin-bottom:8px;">⏰ Andere Arbeitszeiten heute:</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div style="flex:1;">
+        <div style="font-size:10px;color:#aaa;margin-bottom:3px;">Von</div>
+        <input type="time" id="sonderVon" style="width:100%;padding:8px;border:1.5px solid #c0d8f0;border-radius:8px;font-size:14px;font-family:Poppins,sans-serif;"
+          onchange="calcSonderzeit()">
+      </div>
+      <div style="font-size:16px;color:#aaa;margin-top:14px;">–</div>
+      <div style="flex:1;">
+        <div style="font-size:10px;color:#aaa;margin-bottom:3px;">Bis</div>
+        <input type="time" id="sonderBis" style="width:100%;padding:8px;border:1.5px solid #c0d8f0;border-radius:8px;font-size:14px;font-family:Poppins,sans-serif;"
+          onchange="calcSonderzeit()">
+      </div>
+      <div style="flex:0 0 50px;text-align:center;margin-top:14px;">
+        <div style="font-size:10px;color:#aaa;margin-bottom:3px;">Std.</div>
+        <div id="sonderStd" style="font-size:14px;font-weight:700;color:#4f9ff0;">–</div>
+      </div>
+    </div>
   </div>
 
   <!-- TEAMTAG TOGGLE + VERLÄNGERUNG -->
@@ -841,6 +867,18 @@ function render() {
   updateStatusBtns(entry.status||'normal');
   updateTeamBtn(entry.team || false);
   document.getElementById('notesInput').value = entry.notes||'';
+
+  // Sonderzeit-Box wiederherstellen
+  const sonderBox = document.getElementById('sonderzeitBox');
+  if (entry.status === 'sonder' && entry.sonderVon && entry.sonderBis) {
+    sonderBox.style.display = 'block';
+    document.getElementById('sonderVon').value = entry.sonderVon;
+    document.getElementById('sonderBis').value = entry.sonderBis;
+    document.getElementById('sonderStd').textContent = (entry.hours||0).toLocaleString('de-DE')+'h';
+  } else {
+    sonderBox.style.display = 'none';
+  }
+
   updateCalBtn();
   updateSaldo();
 
@@ -899,26 +937,65 @@ function setStatus(status) {
   const soll = PLAN[dow] ? PLAN[dow].soll : 0;
 
   if (!entries[ds]) entries[ds] = {hours: soll, status:'normal', notes:''};
-
   entries[ds].status = status;
 
+  // Sonderzeit-Box anzeigen/verstecken
+  const sonderBox = document.getElementById('sonderzeitBox');
+
   if (status === 'schule') {
-    // Keine Schule = Minusstunden → 0h gearbeitet, Saldo = 0 - soll = -soll
-    entries[ds].hours = 0;
-    todayVal = 0;
+    entries[ds].hours = 0; todayVal = 0;
+    sonderBox.style.display = 'none';
   } else if (status === 'krank' || status === 'frei') {
-    // Krank/Frei = neutral, Soll wird angerechnet
-    entries[ds].hours = soll;
-    todayVal = soll;
+    entries[ds].hours = soll; todayVal = soll;
+    sonderBox.style.display = 'none';
+  } else if (status === 'urlaub') {
+    // Urlaub = Soll-Stunden, kein Minus im Saldo
+    entries[ds].hours = soll; todayVal = soll;
+    sonderBox.style.display = 'none';
+    // Urlaubstag zählen
+    if (!entries[ds].urlaub) entries[ds].urlaub = true;
+  } else if (status === 'sonder') {
+    // Sonderzeit = eigene Von/Bis Zeiten
+    const plan = PLAN[dow] || {};
+    document.getElementById('sonderVon').value = plan.von || '08:00';
+    document.getElementById('sonderBis').value = plan.bis || '16:00';
+    sonderBox.style.display = 'block';
+    calcSonderzeit();
   } else {
-    // Normal: wenn vorher 0, auf Soll zurücksetzen
+    // Normal
     if (entries[ds].hours === 0) entries[ds].hours = soll;
     todayVal = entries[ds].hours;
+    sonderBox.style.display = 'none';
   }
 
   updateDisplay(soll);
   updateStatusBtns(status);
-  scheduleSave();
+  doSave();
+}
+
+function calcSonderzeit() {
+  const von = document.getElementById('sonderVon').value;
+  const bis = document.getElementById('sonderBis').value;
+  if (!von || !bis) return;
+  const [vH,vM] = von.split(':').map(Number);
+  const [bH,bM] = bis.split(':').map(Number);
+  let min = (bH*60+bM) - (vH*60+vM);
+  // Pause abziehen falls nötig
+  if (vH*60+vM < 605 && bH*60+bM > 575) min -= 30;
+  if (vH*60+vM <= 480 && min/60 >= 9) min -= 15; // 45 Min Pause
+  const std = Math.round((min/60)*100)/100;
+  document.getElementById('sonderStd').textContent = std.toLocaleString('de-DE')+'h';
+  // Stunden speichern
+  const ds = fmtDate(selectedDate);
+  const dow = selectedDate.getDay();
+  const soll = PLAN[dow] ? PLAN[dow].soll : 0;
+  if (!entries[ds]) entries[ds] = {hours: soll, status:'sonder', notes:''};
+  entries[ds].hours = std;
+  entries[ds].sonderVon = von;
+  entries[ds].sonderBis = bis;
+  todayVal = std;
+  updateDisplay(soll);
+  doSave();
 }
 
 function toggleTeam() {
@@ -979,12 +1056,15 @@ function updateStatusBtns(status) {
     normal: 'active',
     frei:   'active-frei',
     krank:  'active-krank',
-    schule: 'active-schule'
+    schule: 'active-schule',
+    urlaub: 'active-urlaub',
+    sonder: 'active-sonder'
   };
-  ['normal','frei','krank','schule'].forEach(s => {
+  const allClasses = Object.values(configs);
+  ['normal','frei','krank','schule','urlaub','sonder'].forEach(s => {
     const b = document.getElementById('btn-'+s);
     if (!b) return;
-    b.classList.remove('active','active-frei','active-krank','active-schule');
+    b.classList.remove(...allClasses);
     if (status === s) b.classList.add(configs[s]);
   });
 }
