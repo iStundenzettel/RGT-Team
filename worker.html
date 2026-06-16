@@ -441,7 +441,7 @@ body {
       <div style="font-size:12px;font-weight:700;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Startsaldo / Übertrag</div>
       <div style="font-size:13px;color:#888;margin-bottom:10px;">Stunden aus vorherigen Monaten. Minus = du schuldest noch Stunden.</div>
       <div style="display:flex;gap:10px;align-items:center;">
-        <input type="number" id="settingsSaldo" step="0.1" placeholder="z.B. -5 oder +3"
+        <input type="text" inputmode="text" id="settingsSaldo" placeholder="z.B. -5 oder -19,3"
           style="flex:1;padding:13px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;font-family:'Poppins',sans-serif;">
         <span style="color:#aaa;font-size:13px;">Std.</span>
       </div>
@@ -1168,7 +1168,8 @@ function closeSettings() {
 }
 
 function saveSettings() {
-  const saldo = parseFloat(document.getElementById('settingsSaldo').value) || 0;
+  const saldoRaw = document.getElementById('settingsSaldo').value.replace(',','.').trim();
+  const saldo = parseFloat(saldoRaw) || 0;
   const wochen = parseFloat(document.getElementById('settingsWochen').value) || userData.wochenstunden;
   userData.startsaldo = saldo;
   userData.wochenstunden = wochen;
